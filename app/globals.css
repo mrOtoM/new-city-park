@@ -1,26 +1,59 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-primary-50: #f7eef1;
+  --color-primary-100: #eed7de;
+  --color-primary-200: #dfb3c3;
+  --color-primary-300: #cd8ea3;
+  --color-primary-400: #b96588;
+  --color-primary-500: #a1446d; /* akcent */
+  --color-primary-600: #87385c;
+  --color-primary-700: #6d2c4a;
+  --color-primary-800: #562139; /* karty/ikony */
+  --color-primary-900: #3e1729; /* panely */
+  --color-primary-950: #2a0f1c; /* pozadie */
+
+  /* Doplňujúce akcenty pre viac života */
+  --color-accent-pink: #d94f91; /* CTA, hover */
+  --color-accent-purple: #7a5cf5; /* sekundárne ikony, linky */
+  --color-accent-dark-purple: #6b4ae3; /* sekundárne ikony, linky */
+  --color-accent-blue: #4a90e2; /* linky, info */
+  --color-accent-teal: #50e3c2; /* info, linky */
+  --color-accent-green: #7ed321; /* úspech, potvrdenie */
+  --color-accent-yellow: #f8e71c; /* upozor
+  --color-accent-gold: #f5b54a; /* highlighty, odznaky */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer components {
+  .spinner {
+    margin: 3.2rem auto 1.6rem;
+    width: 60px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 8px solid var(--color-primary-900); /* primary-900 */
+    border-right-color: var(--color-primary-200); /* primary-200 */
+    animation: rotate 1s infinite linear;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .spinner-mini {
+    margin: 0;
+    width: 20px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px solid var(--color-primary-200); /* primary-200 */
+    border-right-color: transparent;
+    animation: rotate 1s infinite linear;
+  }
+
+  @keyframes rotate {
+    to {
+      transform: rotate(1turn);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    line-height: 1 !important;
+  }
 }

@@ -1,0 +1,65 @@
+import { auth } from '@/lib/auth'
+import { Phone, User, Mail } from 'lucide-react'
+import SignOutButton from '@/components/SignOutButton'
+
+export default async function ProfilePage() {
+  const session = await auth()
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="mb-8 flex flex-col items-center text-center">
+        <div className="bg-primary-700 ring-primary-600 mb-4 flex h-32 w-32 items-center justify-center overflow-hidden rounded-full ring-4">
+          <User className="text-primary-300 h-16 w-16" />
+        </div>
+        <h1 className="mb-2 text-2xl font-bold text-white">
+          {session?.user?.name || 'Používateľ'}
+        </h1>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="mb-4 text-xl font-semibold text-white">
+          Osobné informácie
+        </h2>
+
+        <div className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <div className="bg-primary-600 flex h-10 w-10 items-center justify-center rounded-md">
+              <User className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="mb-1 text-sm text-white">Meno a priezvisko</p>
+              <p className="text-primary-400">
+                {session?.user?.name || ''}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="bg-primary-600 flex h-10 w-10 items-center justify-center rounded-md">
+              <Phone className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="mb-1 text-sm text-white">Kontaktné číslo</p>
+              <p className="text-primary-400 flex leading-none">
+                {session?.user?.phone || '–'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="bg-primary-600 flex h-10 w-10 items-center justify-center rounded-md">
+              <Mail className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="mb-1 text-sm text-white">Kontaktný email</p>
+              <p className="text-primary-400">
+                {session?.user?.email || ''}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <SignOutButton />
+    </div>
+  )
+}
