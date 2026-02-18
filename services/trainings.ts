@@ -30,9 +30,9 @@ export async function updateTraining(
   updates: {
     type: string
     datetime: string
-    note?: string
-    minParticipants?: number
-    maxParticipants?: number
+    note?: string | null
+    minParticipants?: number | null
+    maxParticipants?: number | null
     unregisterDeadline?: string | null
   },
 ) {

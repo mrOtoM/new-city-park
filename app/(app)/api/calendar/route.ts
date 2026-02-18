@@ -5,9 +5,9 @@ export async function GET() {
     const trainings = await getTrainings()
 
     return Response.json({ trainings })
-  } catch (error: any) {
+  } catch {
     return Response.json(
-      { message: 'Failed to fetch cabin data' },
+      { message: 'Failed to fetch trainings' },
       { status: 500 },
     )
   }

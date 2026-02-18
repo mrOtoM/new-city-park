@@ -36,10 +36,10 @@ export default function TrainingList({
   registrationCounts = {},
 }: TrainingListProps) {
   const isAdmin = role === 'admin'
-  const { selectedDate, setSelectedDate } = useTraining()
+  const { selectedDate } = useTraining()
   const [registrations, setRegistrations] = useState<number[]>(userRegistrations)
   const [loadingId, setLoadingId] = useState<number | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [confirmTraining, setConfirmTraining] = useState<Training | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
