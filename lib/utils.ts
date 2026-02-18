@@ -55,6 +55,7 @@ export function computeDeadlineFromTraining(trainingDatetime: string, hoursBefor
   if (!trainingDatetime || !hoursBefore) return null
 
   const trainingDate = new Date(trainingDatetime)
+
   if (isNaN(trainingDate.getTime())) return null
 
   const deadlineDate = new Date(trainingDate.getTime() - hoursBefore * 60 * 60 * 1000)
