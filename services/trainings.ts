@@ -4,11 +4,8 @@ import { notFound } from 'next/navigation'
 export async function getTrainings() {
   const { data, error } = await supabase
     .from('trainings')
-    .select('id, type, date, time, note')
-    .order('date', { ascending: false })
-    .order('time', { ascending: false })
-
-  await new Promise((res) => setTimeout(res, 1000))
+    .select('id, type, datetime, note, unregisterDeadline, maxParticipants')
+    .order('datetime', { ascending: false })
 
   if (error) {
     notFound()
@@ -20,7 +17,7 @@ export async function getTrainings() {
 export async function getTraining(id: number) {
   const { data, error } = await supabase
     .from('trainings')
-    .select('id, type, date, time, note, minParticipants, maxParticipants')
+    .select('id, type, datetime, note, minParticipants, maxParticipants, unregisterDeadline')
     .eq('id', id)
     .single()
 
@@ -32,11 +29,11 @@ export async function updateTraining(
   id: number,
   updates: {
     type: string
-    date: string
-    time: string
+    datetime: string
     note?: string
     minParticipants?: number
     maxParticipants?: number
+    unregisterDeadline?: string | null
   },
 ) {
   const { data, error } = await supabaseAdmin
@@ -54,13 +51,25 @@ export async function updateTraining(
   return data
 }
 
+export async function deleteTraining(id: number) {
+  const { error } = await supabaseAdmin
+    .from('trainings')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error(error)
+    throw new Error('Training could not be deleted')
+  }
+}
+
 export async function createTraining(newTraining: {
   type: string
-  date: string
-  time: string
+  datetime: string
   note?: string
   minParticipants?: number
   maxParticipants?: number
+  unregisterDeadline?: string | null
 }) {
   const { data, error } = await supabaseAdmin
     .from('trainings')

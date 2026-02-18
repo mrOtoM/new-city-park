@@ -9,12 +9,8 @@ interface TrainingContextType {
 
 const TrainingContext = createContext<TrainingContextType | null>(null)
 
-const initialState = {
-  selectedDate: undefined,
-}
-
-function TrainingProvider({ children }: any) {
-  const [selectedDate, setSelectedDate] = useState<any>(initialState)
+function TrainingProvider({ children }: { children: React.ReactNode }) {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   return (
     <TrainingContext.Provider

@@ -10,7 +10,7 @@ export async function getUserByAuthId(userId: string) {
   return data
 }
 
-export async function getUser(email: any) {
+export async function getUser(email: string) {
   const { data, error } = await supabase
     .from('users')
     .select('*')

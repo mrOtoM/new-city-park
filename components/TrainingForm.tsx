@@ -1,25 +1,22 @@
 'use client'
 
-import { Dumbbell, Footprints, Heart, RotateCcw } from 'lucide-react'
 import Button from '@/components/Button'
-import { useState } from 'react'
+import ConfirmSheet from '@/components/ConfirmSheet'
+import { TRAINING_TYPES } from '@/lib/constants'
+import { formatDate } from '@/lib/utils'
+import { deleteTrainingAction } from '@/lib/actions'
+import { useState, useTransition } from 'react'
 import { useFormStatus } from 'react-dom'
-
-const trainingTypes = [
-  { value: 'STRENGTH', label: 'Silový tréning', icon: Dumbbell },
-  { value: 'STEP', label: 'Step tréning', icon: Footprints },
-  { value: 'CARDIO', label: 'Kardio tréning', icon: Heart },
-  { value: 'CIRCLE', label: 'Kruhový tréning', icon: RotateCcw },
-]
+import { Trash2 } from 'lucide-react'
 
 interface TrainingData {
   id?: number
   type: string
-  date: string
-  time: string
+  datetime: string
   note?: string
   minParticipants?: number
   maxParticipants?: number
+  unregisterDeadline?: string | null
 }
 
 interface TrainingFormProps {
@@ -42,12 +39,13 @@ const inputClass =
 export default function TrainingForm({ training, action }: TrainingFormProps) {
   const isEdit = !!training?.id
   const [selectedType, setSelectedType] = useState(training?.type || '')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, startDeleteTransition] = useTransition()
+  const [deleteError, setDeleteError] = useState('')
 
   return (
     <div className="mx-auto max-w-6xl p-4">
-      <h1 className="mb-6 text-2xl font-semibold text-white">
-        {isEdit ? 'Upraviť tréning' : 'Nový tréning'}
-      </h1>
+      <h1 className="mb-6 text-2xl font-semibold text-white">{isEdit ? 'Upraviť tréning' : 'Nový tréning'}</h1>
 
       <form action={action} className="space-y-6">
         {training?.id && <input type="hidden" name="id" value={training.id} />}
@@ -55,11 +53,9 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
 
         {/* Typ tréningu */}
         <div>
-          <label className="text-primary-300 mb-2 block text-sm font-medium">
-            Typ tréningu
-          </label>
+          <label className="text-primary-300 mb-2 block text-sm font-medium">Typ tréningu</label>
           <div className="grid grid-cols-2 gap-3">
-            {trainingTypes.map((type) => {
+            {TRAINING_TYPES.map((type) => {
               const Icon = type.icon
               const isSelected = selectedType === type.value
               return (
@@ -81,37 +77,54 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
           </div>
         </div>
 
-        {/* Dátum */}
-        <div>
-          <label htmlFor="date" className="text-primary-300 mb-2 block text-sm font-medium">
-            Dátum
-          </label>
-          <input
-            id="date"
-            name="date"
-            type="date"
-            required
-            defaultValue={training?.date || ''}
-            className={inputClass}
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="date" className="text-primary-300 mb-2 block text-sm font-medium">
+              Dátum
+            </label>
+            <input
+              id="date"
+              name="date"
+              type="date"
+              required
+              defaultValue={training?.datetime ? formatDate(training.datetime, 'yyyy-MM-dd') : ''}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="time" className="text-primary-300 mb-2 block text-sm font-medium">
+              Čas
+            </label>
+            <input
+              id="time"
+              name="time"
+              type="time"
+              required
+              defaultValue={training?.datetime ? formatDate(training.datetime, 'HH:mm') : ''}
+              className={inputClass}
+            />
+          </div>
         </div>
 
-        {/* Čas */}
         <div>
-          <label htmlFor="time" className="text-primary-300 mb-2 block text-sm font-medium">
-            Čas
-          </label>
-          <input
-            id="time"
-            name="time"
-            type="time"
-            required
-            defaultValue={training?.time?.substring(0, 5) || ''}
-            className={inputClass}
-          />
+          <label className="text-primary-300 mb-2 block text-sm font-medium">Odhlásenie možné do</label>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              name="unregisterDeadlineDate"
+              type="date"
+              defaultValue={training?.unregisterDeadline ? formatDate(training.unregisterDeadline, 'yyyy-MM-dd') : ''}
+              className={inputClass}
+            />
+            <input
+              name="unregisterDeadlineTime"
+              type="time"
+              defaultValue={training?.unregisterDeadline ? formatDate(training.unregisterDeadline, 'HH:mm') : ''}
+              className={inputClass}
+            />
+          </div>
+          <p className="text-primary-500 mt-1 text-xs">Voliteľné – ak nevyplníte, odhlásenie bude možné kedykoľvek</p>
         </div>
 
-        {/* Poznámka */}
         <div>
           <label htmlFor="note" className="text-primary-300 mb-2 block text-sm font-medium">
             Poznámka
@@ -126,7 +139,6 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
           />
         </div>
 
-        {/* Min/Max účastníci */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="minParticipants" className="text-primary-300 mb-2 block text-sm font-medium">
@@ -166,6 +178,47 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
           <SubmitButton isEdit={isEdit} />
         </div>
       </form>
+
+      {isEdit && (
+        <>
+          {deleteError && (
+            <p className="mt-4 text-center text-sm text-red-400">{deleteError}</p>
+          )}
+          <div className="border-primary-700 mt-8 border-t pt-6">
+            <Button
+              variant="ghost"
+              fullWidth
+              icon={<Trash2 className="h-4 w-4" />}
+              className="text-red-400 hover:text-red-300"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Zrušiť tréning
+            </Button>
+          </div>
+
+          <ConfirmSheet
+            open={showDeleteConfirm}
+            title="Zrušiť tréning?"
+            description="Tréning bude natrvalo zrušený a všetkým prihláseným účastníkom bude odoslaný email o zrušení."
+            confirmLabel="Zrušiť tréning"
+            cancelLabel="Zrušiť"
+            confirmVariant="primary"
+            loading={isDeleting}
+            onConfirm={() => {
+              setDeleteError('')
+              startDeleteTransition(async () => {
+                try {
+                  if (training?.id) await deleteTrainingAction(training.id)
+                } catch {
+                  setDeleteError('Nepodarilo sa zrušiť tréning')
+                  setShowDeleteConfirm(false)
+                }
+              })
+            }}
+            onCancel={() => setShowDeleteConfirm(false)}
+          />
+        </>
+      )}
     </div>
   )
 }

@@ -7,9 +7,6 @@ const josefin = Josefin_Sans({
   display: 'swap',
 })
 
-import '@/app/globals.css'
-import { TrainingProvider } from '@/components/TrainingContext'
-
 export const metadata = {
   title: {
     template: '%s - New City Park',
@@ -24,12 +21,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="sk">
       <body
         suppressHydrationWarning
         className={`${josefin.className} bg-primary-950 text-primary-100`}
       >
-        <TrainingProvider>{children}</TrainingProvider>
+        {children}
       </body>
     </html>
   )

@@ -1,19 +1,20 @@
-import TrainingForm from '@/components/TrainingForm'
+import TrainingEditTabs from '@/components/TrainingEditTabs'
 import { updateTrainingAction } from '@/lib/actions'
 import { getTraining } from '@/services/trainings'
-import { notFound } from 'next/navigation'
+import { getTrainingParticipants } from '@/services/registrations'
+import { auth } from '@/lib/auth'
+import { notFound, redirect } from 'next/navigation'
 
-export default async function EditTrainingPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function EditTrainingPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await auth()
+  if (session?.user?.role !== 'admin') redirect('/calendar')
+
   const { id } = await params
-  const training = await getTraining(Number(id))
+  const [training, participants] = await Promise.all([getTraining(Number(id)), getTrainingParticipants(Number(id))])
 
   if (!training) {
     notFound()
   }
 
-  return <TrainingForm training={training} action={updateTrainingAction} />
+  return <TrainingEditTabs training={training} action={updateTrainingAction} participants={participants} />
 }

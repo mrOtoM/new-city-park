@@ -13,14 +13,13 @@
   --color-primary-900: #3e1729; /* panely */
   --color-primary-950: #2a0f1c; /* pozadie */
 
-  /* Doplňujúce akcenty pre viac života */
   --color-accent-pink: #d94f91; /* CTA, hover */
   --color-accent-purple: #7a5cf5; /* sekundárne ikony, linky */
   --color-accent-dark-purple: #6b4ae3; /* sekundárne ikony, linky */
   --color-accent-blue: #4a90e2; /* linky, info */
   --color-accent-teal: #50e3c2; /* info, linky */
   --color-accent-green: #7ed321; /* úspech, potvrdenie */
-  --color-accent-yellow: #f8e71c; /* upozor
+  --color-accent-yellow: #f8e71c; /* upozor */
   --color-accent-gold: #f5b54a; /* highlighty, odznaky */
 }
 
@@ -48,6 +47,19 @@
   @keyframes rotate {
     to {
       transform: rotate(1turn);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.25s ease-out;
+  }
+
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
     }
   }
 }

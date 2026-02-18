@@ -65,19 +65,13 @@ export default function Button({
   }
 
   return (
-    <button
-      className={`${classes} relative`}
-      disabled={loading || disabled}
-      {...props}
-    >
+    <button className={`${classes} relative`} disabled={loading || disabled} {...props}>
       {loading && (
         <span className="absolute inset-0 flex items-center justify-center">
           <ButtonSpinner />
         </span>
       )}
-      <span
-        className={`inline-flex items-center gap-2 ${loading ? 'invisible' : ''}`}
-      >
+      <span className={`inline-flex items-center gap-2 ${loading ? 'invisible' : ''}`}>
         {icon}
         {children}
       </span>

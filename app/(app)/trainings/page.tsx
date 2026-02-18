@@ -1,7 +1,9 @@
 import TrainingList from '@/components/TrainingList'
 import Button from '@/components/Button'
 import { getTrainings } from '@/services/trainings'
+import { getUserRegistrations, getRegistrationCounts } from '@/services/registrations'
 import { auth } from '@/lib/auth'
+import { formatDate } from '@/lib/utils'
 import { Plus } from 'lucide-react'
 
 export const revalidate = 0
@@ -15,10 +17,19 @@ export default async function TrainingsPage() {
   const role = session?.user?.role ?? 'user'
   const isAdmin = role === 'admin'
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = formatDate(new Date(), 'yyyy-MM-dd')
   const currentTrainings = trainings
-    .filter((t) => t.date >= today)
-    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+    .filter((t) => t.datetime.slice(0, 10) >= today)
+    .sort((a, b) => a.datetime.localeCompare(b.datetime))
+
+  const [userRegistrations, registrationCounts] = await Promise.all([
+    session?.user?.id ? getUserRegistrations(session.user.id) : Promise.resolve([]),
+    getRegistrationCounts(),
+  ])
+
+  const visibleTrainings = isAdmin
+    ? currentTrainings
+    : currentTrainings.filter((t) => userRegistrations.includes(t.id))
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -35,7 +46,13 @@ export default async function TrainingsPage() {
           </Button>
         </div>
       )}
-      <TrainingList trainings={currentTrainings} role={role} showAll />
+      <TrainingList
+        trainings={visibleTrainings}
+        role={role}
+        showAll
+        userRegistrations={userRegistrations}
+        registrationCounts={registrationCounts}
+      />
     </div>
   )
 }

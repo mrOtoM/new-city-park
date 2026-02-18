@@ -6,8 +6,7 @@ import { useTraining } from './TrainingContext'
 interface Training {
   id: number
   type: string
-  date: string
-  time: string
+  datetime: string
   note: string
 }
 
@@ -40,12 +39,9 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
 
   const daysOfWeek = ['Ne', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So']
 
-  // Helper funkcie
-  const getDaysInMonth = (month: number, year: number) =>
-    new Date(year, month + 1, 0).getDate()
+  const getDaysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate()
 
-  const getFirstDayOfMonth = (month: number, year: number) =>
-    new Date(year, month, 1).getDay()
+  const getFirstDayOfMonth = (month: number, year: number) => new Date(year, month, 1).getDay()
 
   const formatDateString = (day: number) => {
     const month = String(currentMonth + 1).padStart(2, '0')
@@ -55,25 +51,17 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
 
   const isDatePast = (day: number) => {
     const date = new Date(currentYear, currentMonth, day)
-    const todayStart = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-    )
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     return date < todayStart
   }
 
   const hasTrainingOnDate = (day: number) => {
     const dateStr = formatDateString(day)
-    return trainings.some((training) => training.date === dateStr)
+    return trainings.some((training) => training.datetime.slice(0, 10) === dateStr)
   }
 
   const isToday = (day: number) => {
-    return (
-      currentMonth === today.getMonth() &&
-      currentYear === today.getFullYear() &&
-      day === today.getDate()
-    )
+    return currentMonth === today.getMonth() && currentYear === today.getFullYear() && day === today.getDate()
   }
 
   const isSelectedDate = (day: number) => {
@@ -81,7 +69,6 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
   }
 
   const handleDateClick = (day: number) => {
-    // Neklikať na minulé dni
     if (isDatePast(day)) return
 
     const dateStr = formatDateString(day)
@@ -92,8 +79,8 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
     }
   }
 
-  // Funkcie na navigáciu
   const goToPrevMonth = () => {
+    setSelectedDate(null)
     if (currentMonth === 0) {
       setCurrentMonth(11)
       setCurrentYear(currentYear - 1)
@@ -103,6 +90,7 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
   }
 
   const goToNextMonth = () => {
+    setSelectedDate(null)
     if (currentMonth === 11) {
       setCurrentMonth(0)
       setCurrentYear(currentYear + 1)
@@ -116,12 +104,10 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear)
     const days = []
 
-    // Prázdne buňky pre dni pred prvým dňom mesiaca
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>)
     }
 
-    // Dni mesiaca
     for (let day = 1; day <= daysInMonth; day++) {
       const isPast = isDatePast(day)
       const isCurrentDay = isToday(day)
@@ -152,12 +138,7 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
       }
 
       days.push(
-        <button
-          key={day}
-          onClick={() => handleDateClick(day)}
-          disabled={isPast}
-          className={getDayClasses()}
-        >
+        <button key={day} onClick={() => handleDateClick(day)} disabled={isPast} className={getDayClasses()}>
           {day}
         </button>,
       )
@@ -169,19 +150,13 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
   return (
     <div className="mx-auto rounded-lg p-4 text-white">
       <div className="mb-4 flex items-center justify-between">
-        <button
-          onClick={goToPrevMonth}
-          className="text-white hover:text-pink-500"
-        >
+        <button onClick={goToPrevMonth} className="text-white hover:text-pink-500">
           ‹
         </button>
         <h2 className="text-lg font-medium">
           {monthNames[currentMonth]} {currentYear}
         </h2>
-        <button
-          onClick={goToNextMonth}
-          className="text-white hover:text-pink-500"
-        >
+        <button onClick={goToNextMonth} className="text-white hover:text-pink-500">
           ›
         </button>
       </div>
@@ -189,10 +164,7 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
       {/* Days of week header */}
       <div className="mb-2 grid grid-cols-7 gap-1">
         {daysOfWeek.map((day, index) => (
-          <div
-            key={index}
-            className="flex h-8 w-8 items-center justify-center text-sm text-gray-400"
-          >
+          <div key={index} className="flex h-8 w-8 items-center justify-center text-sm text-gray-400">
             {day}
           </div>
         ))}
