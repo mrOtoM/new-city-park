@@ -36,12 +36,29 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
 const inputClass =
   'bg-primary-800 border-primary-700 text-white placeholder:text-primary-600 focus:border-primary-500 focus:ring-primary-500 w-full rounded-lg border px-4 py-3 focus:ring-1 focus:outline-none'
 
+function getDeadlineHoursFromTraining(training?: TrainingData): string {
+  if (!training?.datetime || !training?.unregisterDeadline) return ''
+
+  const trainingDate = new Date(training.datetime)
+  const deadlineDate = new Date(training.unregisterDeadline)
+
+  if (isNaN(trainingDate.getTime()) || isNaN(deadlineDate.getTime())) return ''
+
+  const diffHours = Math.round((trainingDate.getTime() - deadlineDate.getTime()) / (1000 * 60 * 60))
+
+  if (diffHours === 6) return '6'
+  if (diffHours === 15) return '15'
+
+  return ''
+}
+
 export default function TrainingForm({ training, action }: TrainingFormProps) {
   const isEdit = !!training?.id
   const [selectedType, setSelectedType] = useState(training?.type || '')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, startDeleteTransition] = useTransition()
   const [deleteError, setDeleteError] = useState('')
+  const [deadlineHours, setDeadlineHours] = useState(getDeadlineHoursFromTraining(training))
 
   return (
     <div className="mx-auto max-w-6xl p-4">
@@ -108,21 +125,30 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
 
         <div>
           <label className="text-primary-300 mb-2 block text-sm font-medium">Odhlásenie možné do</label>
-          <div className="grid grid-cols-2 gap-4">
-            <input
-              name="unregisterDeadlineDate"
-              type="date"
-              defaultValue={training?.unregisterDeadline ? formatDate(training.unregisterDeadline, 'yyyy-MM-dd') : ''}
-              className={inputClass}
-            />
-            <input
-              name="unregisterDeadlineTime"
-              type="time"
-              defaultValue={training?.unregisterDeadline ? formatDate(training.unregisterDeadline, 'HH:mm') : ''}
-              className={inputClass}
-            />
+          <input type="hidden" name="unregisterDeadlineHours" value={deadlineHours} />
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { value: '', label: 'Bez obmedzenia' },
+              { value: '6', label: '6 hodín pred' },
+              { value: '15', label: '15 hodín pred' },
+            ].map((option) => {
+              const isSelected = deadlineHours === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setDeadlineHours(option.value)}
+                  className={`rounded-lg border px-4 py-3 text-center text-sm font-medium transition-colors ${
+                    isSelected
+                      ? 'border-primary-400 bg-primary-700 text-white'
+                      : 'border-primary-700 bg-primary-800 text-primary-300 hover:border-primary-500'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
           </div>
-          <p className="text-primary-500 mt-1 text-xs">Voliteľné – ak nevyplníte, odhlásenie bude možné kedykoľvek</p>
         </div>
 
         <div>
@@ -181,9 +207,7 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
 
       {isEdit && (
         <>
-          {deleteError && (
-            <p className="mt-4 text-center text-sm text-red-400">{deleteError}</p>
-          )}
+          {deleteError && <p className="mt-4 text-center text-sm text-red-400">{deleteError}</p>}
           <div className="border-primary-700 mt-8 border-t pt-6">
             <Button
               variant="ghost"

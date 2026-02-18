@@ -50,3 +50,20 @@ export function isDeadlinePassed(deadline?: string | Date | null) {
 export function buildDeadlineISO(date: string, time: string) {
   return date && time ? `${date}T${time}` : null
 }
+
+export function computeDeadlineFromTraining(trainingDatetime: string, hoursBefore: number): string | null {
+  if (!trainingDatetime || !hoursBefore) return null
+
+  const trainingDate = new Date(trainingDatetime)
+  if (isNaN(trainingDate.getTime())) return null
+
+  const deadlineDate = new Date(trainingDate.getTime() - hoursBefore * 60 * 60 * 1000)
+
+  const year = deadlineDate.getFullYear()
+  const month = String(deadlineDate.getMonth() + 1).padStart(2, '0')
+  const day = String(deadlineDate.getDate()).padStart(2, '0')
+  const hours = String(deadlineDate.getHours()).padStart(2, '0')
+  const minutes = String(deadlineDate.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}

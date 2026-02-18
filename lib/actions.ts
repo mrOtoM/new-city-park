@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createTraining, updateTraining, deleteTraining } from '@/services/trainings'
 import { registerForTraining, unregisterFromTraining } from '@/services/registrations'
-import { buildDeadlineISO, formatDate } from '@/lib/utils'
+import { buildDeadlineISO, computeDeadlineFromTraining, formatDate } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -33,10 +33,10 @@ export async function createTrainingAction(formData: FormData) {
   const maxParticipants = formData.get('maxParticipants')
     ? Number(formData.get('maxParticipants'))
     : undefined
-  const unregisterDeadline = buildDeadlineISO(
-    formData.get('unregisterDeadlineDate') as string,
-    formData.get('unregisterDeadlineTime') as string,
-  )
+  const deadlineHours = formData.get('unregisterDeadlineHours') as string
+  const unregisterDeadline = deadlineHours
+    ? computeDeadlineFromTraining(datetime, Number(deadlineHours))
+    : null
 
   await createTraining({ type, datetime, note, minParticipants, maxParticipants, unregisterDeadline })
 
@@ -64,10 +64,10 @@ export async function updateTrainingAction(formData: FormData) {
   const maxParticipants = formData.get('maxParticipants')
     ? Number(formData.get('maxParticipants'))
     : null
-  const unregisterDeadline = buildDeadlineISO(
-    formData.get('unregisterDeadlineDate') as string,
-    formData.get('unregisterDeadlineTime') as string,
-  )
+  const deadlineHoursUpdate = formData.get('unregisterDeadlineHours') as string
+  const unregisterDeadline = deadlineHoursUpdate
+    ? computeDeadlineFromTraining(datetime, Number(deadlineHoursUpdate))
+    : null
 
   await updateTraining(id, { type, datetime, note, minParticipants, maxParticipants, unregisterDeadline })
 

@@ -5,8 +5,8 @@ import bg6 from '@/public/bg6.png'
 import Link from 'next/link'
 import Button from '@/components/Button'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { Mail } from 'lucide-react'
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState('')
@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
-  const router = useRouter()
+  const [emailSent, setEmailSent] = useState(false)
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,8 +29,8 @@ export default function RegisterPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError('Heslo musí mať aspoň 6 znakov')
+    if (password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError('Heslo musí mať aspoň 8 znakov, obsahovať malé písmeno, veľké písmeno a číslicu')
       return
     }
 
@@ -57,6 +57,8 @@ export default function RegisterPage() {
         setError('Neplatná emailová adresa')
       } else if (error.message.includes('already registered')) {
         setError('Tento email je už zaregistrovaný')
+      } else if (error.message.includes('password')) {
+        setError('Heslo musí mať aspoň 8 znakov, veľké a malé písmeno a číslicu')
       } else {
         setError('Registrácia sa nepodarila. Skúste to znova.')
       }
@@ -64,8 +66,8 @@ export default function RegisterPage() {
       return
     }
 
-    router.push('/calendar')
-    router.refresh()
+    setEmailSent(true)
+    setLoading(false)
   }
 
   const handleGoogleRegister = async () => {
@@ -95,146 +97,168 @@ export default function RegisterPage() {
         </div>
 
         <div className="flex flex-1 flex-col overflow-auto p-6">
-          <h2 className="text-primary-950 text-center text-xl font-semibold">Registrácia</h2>
-          <form onSubmit={handleRegister} className="mt-6 space-y-4">
-            {error && <p className="text-primary-500 text-center text-sm">{error}</p>}
+          <h2 className="text-primary-950 text-center text-xl font-semibold">
+            {emailSent ? 'Overenie emailu' : 'Registrácia'}
+          </h2>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="firstName" className="sr-only">
-                  Meno
-                </label>
-                <input
-                  id="firstName"
-                  type="text"
-                  placeholder="Meno"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                  className={inputClass}
-                />
+          {emailSent ? (
+            <div className="mt-8 space-y-4 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                <Mail className="h-8 w-8 text-green-600" />
               </div>
-              <div>
-                <label htmlFor="lastName" className="sr-only">
-                  Priezvisko
-                </label>
-                <input
-                  id="lastName"
-                  type="text"
-                  placeholder="Priezvisko"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                  className={inputClass}
-                />
+              <p className="text-primary-700 text-sm">
+                Na adresu <strong>{email}</strong> sme odoslali potvrdzovací email.
+              </p>
+              <p className="text-primary-400 text-xs">Kliknite na odkaz v emaile pre dokončenie registrácie.</p>
+              <div className="pt-4">
+                <Link href="/login" className="text-primary-600 text-sm font-medium hover:underline">
+                  Späť na prihlásenie
+                </Link>
               </div>
             </div>
+          ) : (
+            <>
+              <form onSubmit={handleRegister} className="mt-6 space-y-4">
+                {error && <p className="text-primary-500 text-center text-sm">{error}</p>}
 
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className={inputClass}
-              />
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="firstName" className="sr-only">
+                      Meno
+                    </label>
+                    <input
+                      id="firstName"
+                      type="text"
+                      placeholder="Meno"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="lastName" className="sr-only">
+                      Priezvisko
+                    </label>
+                    <input
+                      id="lastName"
+                      type="text"
+                      placeholder="Priezvisko"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label htmlFor="phone" className="sr-only">
-                Telefónne číslo
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                placeholder="Telefónne číslo"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className={inputClass}
-              />
-            </div>
+                <div>
+                  <label htmlFor="email" className="sr-only">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Heslo
-              </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Heslo"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className={inputClass}
-              />
-            </div>
+                <div>
+                  <label htmlFor="phone" className="sr-only">
+                    Telefónne číslo
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    placeholder="Telefónne číslo"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="passwordConfirm" className="sr-only">
-                Zopakujte heslo
-              </label>
-              <input
-                id="passwordConfirm"
-                type="password"
-                placeholder="Zopakujte heslo"
-                value={passwordConfirm}
-                onChange={(e) => setPasswordConfirm(e.target.value)}
-                required
-                className={inputClass}
-              />
-            </div>
+                <div>
+                  <label htmlFor="password" className="sr-only">
+                    Heslo
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="Heslo"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
 
-            <div>
-              <Button type="submit" variant="primary" fullWidth loading={loading}>
-                Zaregistrovať sa
-              </Button>
-            </div>
-          </form>
+                <div>
+                  <label htmlFor="passwordConfirm" className="sr-only">
+                    Zopakujte heslo
+                  </label>
+                  <input
+                    id="passwordConfirm"
+                    type="password"
+                    placeholder="Zopakujte heslo"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
 
-          <div className="mt-5 flex items-center gap-3">
-            <div className="bg-primary-200 h-px flex-1" />
-            <span className="text-primary-400 text-xs">alebo</span>
-            <div className="bg-primary-200 h-px flex-1" />
-          </div>
+                <div>
+                  <Button type="submit" variant="primary" fullWidth loading={loading}>
+                    Zaregistrovať sa
+                  </Button>
+                </div>
+              </form>
 
-          <button
-            type="button"
-            onClick={handleGoogleRegister}
-            disabled={googleLoading}
-            className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
-            </svg>
-            {googleLoading ? 'Presmerovanie...' : 'Registrovať sa cez Google'}
-          </button>
+              <div className="mt-5 flex items-center gap-3">
+                <div className="bg-primary-200 h-px flex-1" />
+                <span className="text-primary-400 text-xs">alebo</span>
+                <div className="bg-primary-200 h-px flex-1" />
+              </div>
 
-          <div className="text-primary-400 mt-auto pt-4 text-center text-sm">
-            Už máte účet?{' '}
-            <Link href="/login" className="text-primary-600 font-medium hover:underline">
-              Prihlásiť sa
-            </Link>
-          </div>
+              <button
+                type="button"
+                onClick={handleGoogleRegister}
+                disabled={googleLoading}
+                className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                {googleLoading ? 'Presmerovanie...' : 'Registrovať sa cez Google'}
+              </button>
+
+              <div className="text-primary-400 mt-auto pt-4 text-center text-sm">
+                Už máte účet?{' '}
+                <Link href="/login" className="text-primary-600 font-medium hover:underline">
+                  Prihlásiť sa
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </main>
