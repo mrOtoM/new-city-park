@@ -1,26 +1,54 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-primary-50: #f7eef1;
-  --color-primary-100: #eed7de;
-  --color-primary-200: #dfb3c3;
-  --color-primary-300: #cd8ea3;
-  --color-primary-400: #b96588;
-  --color-primary-500: #a1446d; /* akcent */
-  --color-primary-600: #87385c;
-  --color-primary-700: #6d2c4a;
-  --color-primary-800: #562139; /* karty/ikony */
-  --color-primary-900: #3e1729; /* panely */
-  --color-primary-950: #2a0f1c; /* pozadie */
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+  --color-primary-950: var(--primary-950);
 
-  --color-accent-pink: #d94f91; /* CTA, hover */
-  --color-accent-purple: #7a5cf5; /* sekundárne ikony, linky */
-  --color-accent-dark-purple: #6b4ae3; /* sekundárne ikony, linky */
-  --color-accent-blue: #4a90e2; /* linky, info */
-  --color-accent-teal: #50e3c2; /* info, linky */
-  --color-accent-green: #7ed321; /* úspech, potvrdenie */
-  --color-accent-yellow: #f8e71c; /* upozor */
-  --color-accent-gold: #f5b54a; /* highlighty, odznaky */
+  --color-accent-pink: #d94f91;
+  --color-accent-purple: #7a5cf5;
+  --color-accent-dark-purple: #6b4ae3;
+  --color-accent-blue: #4a90e2;
+  --color-accent-teal: #50e3c2;
+  --color-accent-green: #7ed321;
+  --color-accent-yellow: #f8e71c;
+  --color-accent-gold: #f5b54a;
+}
+
+:root {
+  --primary-50: #2a0f1c;
+  --primary-100: #3e1729;
+  --primary-200: #562139;
+  --primary-300: #6d2c4a;
+  --primary-400: #87385c;
+  --primary-500: #a1446d;
+  --primary-600: #b96588;
+  --primary-700: #d4bcc7;
+  --primary-800: #e4d4db;
+  --primary-900: #f0e6ea;
+  --primary-950: #f7f2f4;
+}
+
+.dark {
+  --primary-50: #f7eef1;
+  --primary-100: #eed7de;
+  --primary-200: #dfb3c3;
+  --primary-300: #cd8ea3;
+  --primary-400: #b96588;
+  --primary-500: #a1446d;
+  --primary-600: #87385c;
+  --primary-700: #6d2c4a;
+  --primary-800: #562139;
+  --primary-900: #3e1729;
+  --primary-950: #2a0f1c;
 }
 
 @layer components {
@@ -29,8 +57,8 @@
     width: 60px;
     aspect-ratio: 1;
     border-radius: 50%;
-    border: 8px solid var(--color-primary-900); /* primary-900 */
-    border-right-color: var(--color-primary-200); /* primary-200 */
+    border: 8px solid var(--color-primary-900);
+    border-right-color: var(--color-primary-200);
     animation: rotate 1s infinite linear;
   }
 
@@ -39,7 +67,7 @@
     width: 20px;
     aspect-ratio: 1;
     border-radius: 50%;
-    border: 2px solid var(--color-primary-200); /* primary-200 */
+    border: 2px solid var(--color-primary-200);
     border-right-color: transparent;
     animation: rotate 1s infinite linear;
   }

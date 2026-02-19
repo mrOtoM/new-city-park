@@ -34,7 +34,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
 }
 
 const inputClass =
-  'bg-primary-800 border-primary-700 text-white placeholder:text-primary-600 focus:border-primary-500 focus:ring-primary-500 w-full rounded-lg border px-4 py-3 focus:ring-1 focus:outline-none'
+  'bg-primary-800 border-primary-700 text-primary-50 placeholder:text-primary-600 focus:border-primary-500 focus:ring-primary-500 w-full rounded-lg border px-4 py-3 focus:ring-1 focus:outline-none'
 
 function getDeadlineHoursFromTraining(training?: TrainingData): string {
   if (!training?.datetime || !training?.unregisterDeadline) return ''
@@ -62,7 +62,7 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
 
   return (
     <div className="mx-auto max-w-6xl p-4">
-      <h1 className="mb-6 text-2xl font-semibold text-white">{isEdit ? 'Upraviť tréning' : 'Nový tréning'}</h1>
+      <h1 className="mb-6 text-2xl font-semibold text-primary-50">{isEdit ? 'Upraviť tréning' : 'Nový tréning'}</h1>
 
       <form action={action} className="space-y-6">
         {training?.id && <input type="hidden" name="id" value={training.id} />}
@@ -82,7 +82,7 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
                   onClick={() => setSelectedType(type.value)}
                   className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
                     isSelected
-                      ? 'border-primary-400 bg-primary-700 text-white'
+                      ? 'border-primary-400 bg-primary-700 text-primary-50'
                       : 'border-primary-700 bg-primary-800 text-primary-300 hover:border-primary-500'
                   }`}
                 >
@@ -140,7 +140,7 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
                   onClick={() => setDeadlineHours(option.value)}
                   className={`rounded-lg border px-4 py-3 text-center text-sm font-medium transition-colors ${
                     isSelected
-                      ? 'border-primary-400 bg-primary-700 text-white'
+                      ? 'border-primary-400 bg-primary-700 text-primary-50'
                       : 'border-primary-700 bg-primary-800 text-primary-300 hover:border-primary-500'
                   }`}
                 >

@@ -87,17 +87,17 @@ export default function RegisterPage() {
   }
 
   const inputClass =
-    'bg-primary-50 text-primary-950 placeholder:text-primary-300 focus:ring-primary-200 w-full rounded-lg border border-transparent px-4 py-3 focus:ring-2 focus:outline-none'
+    'bg-primary-900 text-primary-50 placeholder:text-primary-400 focus:ring-primary-600 w-full rounded-lg border border-transparent px-4 py-3 focus:ring-2 focus:outline-none'
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="flex min-h-screen w-full flex-col overflow-hidden rounded-none bg-white sm:mx-auto sm:min-h-auto sm:max-w-sm sm:rounded-2xl sm:border sm:border-gray-100 sm:shadow-lg">
-        <div className="relative h-[34vh] flex-none bg-gray-200 sm:h-54">
+    <main className="flex min-h-screen items-center justify-center bg-primary-900">
+      <div className="flex min-h-screen w-full flex-col overflow-hidden rounded-none bg-primary-950 sm:mx-auto sm:min-h-auto sm:max-w-sm sm:rounded-2xl sm:border sm:border-primary-800 sm:shadow-lg">
+        <div className="relative h-[34vh] flex-none bg-primary-800 sm:h-54">
           <Image src={bg6} quality={80} alt="hero" fill className="flex-1 object-cover" />
         </div>
 
         <div className="flex flex-1 flex-col overflow-auto p-6">
-          <h2 className="text-primary-950 text-center text-xl font-semibold">
+          <h2 className="text-center text-xl font-semibold text-primary-200">
             {emailSent ? 'Overenie emailu' : 'Registrácia'}
           </h2>
 
@@ -106,12 +106,12 @@ export default function RegisterPage() {
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                 <Mail className="h-8 w-8 text-green-600" />
               </div>
-              <p className="text-primary-700 text-sm">
+              <p className="text-sm text-primary-300">
                 Na adresu <strong>{email}</strong> sme odoslali potvrdzovací email.
               </p>
-              <p className="text-primary-400 text-xs">Kliknite na odkaz v emaile pre dokončenie registrácie.</p>
+              <p className="text-xs text-primary-400">Kliknite na odkaz v emaile pre dokončenie registrácie.</p>
               <div className="pt-4">
-                <Link href="/login" className="text-primary-600 text-sm font-medium hover:underline">
+                <Link href="/login" className="text-sm font-medium text-primary-300 hover:underline">
                   Späť na prihlásenie
                 </Link>
               </div>
@@ -119,7 +119,7 @@ export default function RegisterPage() {
           ) : (
             <>
               <form onSubmit={handleRegister} className="mt-6 space-y-4">
-                {error && <p className="text-primary-500 text-center text-sm">{error}</p>}
+                {error && <p className="text-center text-sm text-red-400">{error}</p>}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -219,16 +219,16 @@ export default function RegisterPage() {
               </form>
 
               <div className="mt-5 flex items-center gap-3">
-                <div className="bg-primary-200 h-px flex-1" />
-                <span className="text-primary-400 text-xs">alebo</span>
-                <div className="bg-primary-200 h-px flex-1" />
+                <div className="h-px flex-1 bg-primary-700" />
+                <span className="text-xs text-primary-400">alebo</span>
+                <div className="h-px flex-1 bg-primary-700" />
               </div>
 
               <button
                 type="button"
                 onClick={handleGoogleRegister}
                 disabled={googleLoading}
-                className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-primary-700 bg-primary-900 px-4 py-3 text-sm font-medium text-primary-200 transition-colors hover:bg-primary-800 disabled:opacity-50"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path
@@ -251,9 +251,9 @@ export default function RegisterPage() {
                 {googleLoading ? 'Presmerovanie...' : 'Registrovať sa cez Google'}
               </button>
 
-              <div className="text-primary-400 mt-auto pt-4 text-center text-sm">
+              <div className="mt-auto pt-4 text-center text-sm text-primary-400">
                 Už máte účet?{' '}
-                <Link href="/login" className="text-primary-600 font-medium hover:underline">
+                <Link href="/login" className="font-medium text-primary-300 hover:underline">
                   Prihlásiť sa
                 </Link>
               </div>

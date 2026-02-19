@@ -59,7 +59,7 @@ export default function ConfirmSheet({
           {/* Handle */}
           <div className="bg-primary-600 mx-auto mb-4 h-1 w-10 rounded-full" />
 
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
+          <h3 className="text-lg font-semibold text-primary-50">{title}</h3>
           {description && <p className="text-primary-300 mt-2 text-sm">{description}</p>}
 
           <div className="mt-6 flex gap-3">
@@ -76,7 +76,7 @@ export default function ConfirmSheet({
       {/* Desktop: Centered Dialog */}
       <div className="fixed inset-0 z-50 hidden items-center justify-center md:flex">
         <div className="bg-primary-900 w-full max-w-md rounded-2xl px-6 py-6 shadow-xl">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
+          <h3 className="text-lg font-semibold text-primary-50">{title}</h3>
           {description && <p className="text-primary-300 mt-2 text-sm">{description}</p>}
 
           <div className="mt-6 flex justify-end gap-3">

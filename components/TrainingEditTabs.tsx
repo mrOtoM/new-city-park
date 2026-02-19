@@ -46,7 +46,7 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
           type="button"
           onClick={() => setActiveTab('info')}
           className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
-            activeTab === 'info' ? 'border-accent-500 border-b-2 text-white' : 'text-primary-400 hover:text-primary-200'
+            activeTab === 'info' ? 'border-accent-500 border-b-2 text-primary-50' : 'text-primary-400 hover:text-primary-200'
           }`}
         >
           Informácie
@@ -56,7 +56,7 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
           onClick={() => setActiveTab('participants')}
           className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
             activeTab === 'participants'
-              ? 'border-accent-500 border-b-2 text-white'
+              ? 'border-accent-500 border-b-2 text-primary-50'
               : 'text-primary-400 hover:text-primary-200'
           }`}
         >
@@ -77,7 +77,7 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
                   {participants.active.map((p, i) => (
                     <li key={i} className="bg-primary-900/50 flex items-center justify-between rounded-lg p-3">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-white">{p.name}</p>
+                        <p className="font-medium text-primary-50">{p.name}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                           <span className="text-primary-400 flex items-center gap-1 text-xs">
                             <Phone className="h-3 w-3" />
@@ -107,7 +107,7 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
                         className="bg-primary-900/30 flex items-center justify-between rounded-lg p-3 opacity-60"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-white line-through">{p.name}</p>
+                          <p className="font-medium text-primary-50 line-through">{p.name}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                             <span className="text-primary-400 flex items-center gap-1 text-xs">
                               <Phone className="h-3 w-3" />

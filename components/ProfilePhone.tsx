@@ -35,7 +35,7 @@ export default function ProfilePhone({ phone }: ProfilePhoneProps) {
         <Phone className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="mb-1 text-sm text-white">Kontaktné číslo</p>
+        <p className="mb-1 text-sm text-primary-50">Kontaktné číslo</p>
         {isEditing ? (
           <div className="flex items-center gap-2">
             <input
@@ -44,7 +44,7 @@ export default function ProfilePhone({ phone }: ProfilePhoneProps) {
               onChange={(e) => setValue(e.target.value)}
               placeholder="Telefónne číslo"
               autoFocus
-              className="bg-primary-800 border-primary-600 text-white placeholder:text-primary-600 w-full rounded-md border px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+              className="bg-primary-800 border-primary-600 text-primary-50 placeholder:text-primary-600 w-full rounded-md border px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
             />
             <button
               onClick={handleSave}

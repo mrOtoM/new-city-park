@@ -1,6 +1,7 @@
 import './globals.css'
 
 import { Josefin_Sans } from 'next/font/google'
+import ThemeProvider from '@/components/ThemeProvider'
 
 const josefin = Josefin_Sans({
   subsets: ['latin'],
@@ -26,7 +27,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${josefin.className} bg-primary-950 text-primary-100`}
       >
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

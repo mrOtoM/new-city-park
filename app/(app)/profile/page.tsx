@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { User, Mail } from 'lucide-react'
 import SignOutButton from '@/components/SignOutButton'
 import ProfilePhone from '@/components/ProfilePhone'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -13,13 +14,13 @@ export default async function ProfilePage() {
           <div className="bg-primary-700 ring-primary-600 mb-4 flex h-32 w-32 items-center justify-center overflow-hidden rounded-full ring-4">
             <User className="text-primary-300 h-16 w-16" />
           </div>
-          <h1 className="mb-2 text-2xl font-bold text-white">
+          <h1 className="mb-2 text-2xl font-bold text-primary-50">
             {session?.user?.name || 'Používateľ'}
           </h1>
         </div>
 
         <div className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold text-white">
+          <h2 className="mb-4 text-xl font-semibold text-primary-50">
             Osobné informácie
           </h2>
 
@@ -29,7 +30,7 @@ export default async function ProfilePage() {
                 <User className="h-4 w-4" />
               </div>
               <div>
-                <p className="mb-1 text-sm text-white">Meno a priezvisko</p>
+                <p className="mb-1 text-sm text-primary-50">Meno a priezvisko</p>
                 <p className="text-primary-400">{session?.user?.name || ''}</p>
               </div>
             </div>
@@ -41,10 +42,17 @@ export default async function ProfilePage() {
                 <Mail className="h-4 w-4" />
               </div>
               <div>
-                <p className="mb-1 text-sm text-white">Kontaktný email</p>
+                <p className="mb-1 text-sm text-primary-50">Kontaktný email</p>
                 <p className="text-primary-400">{session?.user?.email || ''}</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="mb-4 text-xl font-semibold text-primary-50">Nastavenia</h2>
+          <div className="space-y-4">
+            <ThemeToggle />
           </div>
         </div>
       </div>

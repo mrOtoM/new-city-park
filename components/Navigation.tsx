@@ -32,7 +32,7 @@ export default function Navigation() {
           <li key={link.name}>
             <Link
               className={`hover:text-primary-100 text-primary-400 flex w-24 flex-col items-center gap-y-2 font-semibold transition-colors ${
-                pathname === link.href ? 'text-white' : ''
+                pathname === link.href ? 'text-primary-50' : ''
               }`}
               href={link.href}
             >
