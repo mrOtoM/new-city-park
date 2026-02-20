@@ -37,7 +37,7 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
     'December',
   ]
 
-  const daysOfWeek = ['Ne', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So']
+  const daysOfWeek = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 
   const getDaysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate()
 
@@ -101,7 +101,7 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
 
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentMonth, currentYear)
-    const firstDay = getFirstDayOfMonth(currentMonth, currentYear)
+    const firstDay = (getFirstDayOfMonth(currentMonth, currentYear) + 6) % 7
     const days = []
 
     for (let i = 0; i < firstDay; i++) {
@@ -148,7 +148,7 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
   }
 
   return (
-    <div className="mx-auto rounded-lg p-4 text-primary-50">
+    <div className="text-primary-50 mx-auto rounded-lg p-4">
       <div className="mb-4 flex items-center justify-between">
         <button onClick={goToPrevMonth} className="text-primary-50 hover:text-pink-500">
           ‹
@@ -164,7 +164,7 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
       {/* Days of week header */}
       <div className="mb-2 grid grid-cols-7 gap-1">
         {daysOfWeek.map((day, index) => (
-          <div key={index} className="flex h-8 w-8 items-center justify-center text-sm text-primary-400">
+          <div key={index} className="text-primary-400 flex h-8 w-8 items-center justify-center text-sm">
             {day}
           </div>
         ))}
