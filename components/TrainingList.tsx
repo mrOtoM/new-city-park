@@ -91,21 +91,19 @@ export default function TrainingList({
   return (
     <div className="p-4">
       {errorMsg && (
-        <div className="mb-3 rounded-lg bg-red-500/10 px-4 py-2 text-center text-sm text-red-400">
-          {errorMsg}
-        </div>
+        <div className="mb-3 rounded-lg bg-red-500/10 px-4 py-2 text-center text-sm text-red-400">{errorMsg}</div>
       )}
       {!showAll && selectedDate && (
         <div className="mb-4">
-          <h2 className="text-2xl text-primary-50">Tréningy - {formatDate(selectedDate)}</h2>
+          <h2 className="text-primary-50 text-2xl">Tréningy - {formatDate(selectedDate)}</h2>
         </div>
       )}
       {filteredTrainings.length === 0 ? (
-        <div className="py-8 text-center text-primary-400">
-          <p>Žiadne tréningy v tento deň</p>
+        <div className="text-primary-400 py-8 text-center">
+          <p>Žiadne tréningy</p>
         </div>
       ) : (
-        <ul className="flex h-full flex-col items-center justify-between space-y-3 text-primary-50">
+        <ul className="text-primary-50 flex h-full flex-col items-center justify-between space-y-3">
           {filteredTrainings.map((training) => {
             const isRegistered = registrations.includes(training.id)
             const deadlinePassed = isDeadlinePassed(training.unregisterDeadline)
