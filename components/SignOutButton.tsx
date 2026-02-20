@@ -1,5 +1,5 @@
 import { LogOut } from 'lucide-react'
-import { signOutAction } from '@/lib/actions'
+import { signOutAction } from '@/services/users'
 import Button from './Button'
 
 export default function SignOutButton() {

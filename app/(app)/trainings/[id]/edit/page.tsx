@@ -1,5 +1,5 @@
 import TrainingEditTabs from '@/components/TrainingEditTabs'
-import { updateTrainingAction } from '@/lib/actions'
+import { updateTrainingAction } from '@/services/trainings'
 import { getTraining } from '@/services/trainings'
 import { getTrainingParticipants } from '@/services/registrations'
 import { auth } from '@/lib/auth'

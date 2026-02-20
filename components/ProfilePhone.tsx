@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { Phone, Pencil, Check, X } from 'lucide-react'
-import { updatePhoneAction } from '@/lib/actions'
+import { updatePhoneAction } from '@/services/users'
 
 interface ProfilePhoneProps {
   phone: string

@@ -1,5 +1,5 @@
 import TrainingForm from '@/components/TrainingForm'
-import { createTrainingAction } from '@/lib/actions'
+import { createTrainingAction } from '@/services/trainings'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 

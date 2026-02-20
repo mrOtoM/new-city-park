@@ -22,9 +22,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="sk">
+    <html lang="sk" suppressHydrationWarning>
       <body
-        suppressHydrationWarning
         className={`${josefin.className} bg-primary-950 text-primary-100`}
       >
         <ThemeProvider>{children}</ThemeProvider>
