@@ -6,7 +6,7 @@ import { Trash2 } from 'lucide-react'
 
 import Button from '@/components/Button'
 import ConfirmSheet from '@/components/ConfirmSheet'
-import { TRAINING_TYPES } from '@/lib/constants'
+import { TRAINING_TYPES, UNREGISTER_DEADLINE_OPTIONS } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
 import { deleteTrainingAction } from '@/services/trainings'
 
@@ -46,11 +46,9 @@ function getDeadlineHoursFromTraining(training?: TrainingData): string {
   if (isNaN(trainingDate.getTime()) || isNaN(deadlineDate.getTime())) return ''
 
   const diffHours = Math.round((trainingDate.getTime() - deadlineDate.getTime()) / (1000 * 60 * 60))
+  const match = UNREGISTER_DEADLINE_OPTIONS.find((opt) => opt.value !== '' && Number(opt.value) === diffHours)
 
-  if (diffHours === 6) return '6'
-  if (diffHours === 15) return '15'
-
-  return ''
+  return match?.value ?? ''
 }
 
 export default function TrainingForm({ training, action }: TrainingFormProps) {
@@ -127,11 +125,7 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
           <label className="text-primary-300 mb-2 block text-sm font-medium">Odhlásenie možné do</label>
           <input type="hidden" name="unregisterDeadlineHours" value={deadlineHours} />
           <div className="grid grid-cols-3 gap-3">
-            {[
-              { value: '', label: 'Bez obmedzenia' },
-              { value: '6', label: '6 hodín pred' },
-              { value: '15', label: '15 hodín pred' },
-            ].map((option) => {
+            {UNREGISTER_DEADLINE_OPTIONS.map((option) => {
               const isSelected = deadlineHours === option.value
               return (
                 <button

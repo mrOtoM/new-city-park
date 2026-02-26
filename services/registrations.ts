@@ -75,6 +75,15 @@ export async function unregisterFromTraining(trainingId: number, userId: string)
   }
 }
 
+import type { UserJoin } from '@/lib/types'
+
+function parseUserJoin(users: unknown): UserJoin | null {
+  if (users && typeof users === 'object' && 'fullName' in users) {
+    return users as UserJoin
+  }
+  return null
+}
+
 export async function getTrainingParticipants(trainingId: number) {
   const { data, error } = await supabaseAdmin
     .from('training_registrations')
@@ -87,25 +96,29 @@ export async function getTrainingParticipants(trainingId: number) {
     return { active: [], cancelled: [] }
   }
 
-  type UserJoin = { fullName: string; phoneNumber: string | null; email: string | null }
-
   const active = data
     .filter((r) => !r.cancelled_at)
-    .map((r) => ({
-      name: (r.users as unknown as UserJoin)?.fullName || 'Neznámy',
-      phone: (r.users as unknown as UserJoin)?.phoneNumber || '–',
-      email: (r.users as unknown as UserJoin)?.email || '–',
-      registeredAt: r.registered_at,
-    }))
+    .map((r) => {
+      const user = parseUserJoin(r.users)
+      return {
+        name: user?.fullName || 'Neznámy',
+        phone: user?.phoneNumber || '–',
+        email: user?.email || '–',
+        registeredAt: r.registered_at,
+      }
+    })
 
   const cancelled = data
     .filter((r) => r.cancelled_at)
-    .map((r) => ({
-      name: (r.users as unknown as UserJoin)?.fullName || 'Neznámy',
-      phone: (r.users as unknown as UserJoin)?.phoneNumber || '–',
-      email: (r.users as unknown as UserJoin)?.email || '–',
-      cancelledAt: r.cancelled_at!,
-    }))
+    .map((r) => {
+      const user = parseUserJoin(r.users)
+      return {
+        name: user?.fullName || 'Neznámy',
+        phone: user?.phoneNumber || '–',
+        email: user?.email || '–',
+        cancelledAt: r.cancelled_at ?? '',
+      }
+    })
 
   return { active, cancelled }
 }

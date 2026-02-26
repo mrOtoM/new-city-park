@@ -9,3 +9,9 @@ export const TRAINING_TYPES = [
 ] as const
 
 export type TrainingType = (typeof TRAINING_TYPES)[number]['value']
+
+export const UNREGISTER_DEADLINE_OPTIONS = [
+  { value: '', label: 'Bez obmedzenia' },
+  { value: '6', label: '6 hodín pred' },
+  { value: '15', label: '15 hodín pred' },
+] as const
