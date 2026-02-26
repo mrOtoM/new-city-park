@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Phone } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import TrainingForm from './TrainingForm'
+import TrainingForm from '@/components/TrainingForm'
 
 interface ActiveParticipant {
   name: string

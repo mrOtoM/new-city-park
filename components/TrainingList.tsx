@@ -1,13 +1,14 @@
 'use client'
 
+import { useState, useTransition } from 'react'
 import { Pencil, Users } from 'lucide-react'
+
 import { TRAINING_TYPES } from '@/lib/constants'
 import { formatDate, isDeadlinePassed } from '@/lib/utils'
-import { useTraining } from './TrainingContext'
+import { useTraining } from '@/components/TrainingContext'
 import { registerForTrainingAction, unregisterFromTrainingAction } from '@/services/registrations'
-import Button from './Button'
-import ConfirmSheet from './ConfirmSheet'
-import { useState, useTransition } from 'react'
+import Button from '@/components/Button'
+import ConfirmSheet from '@/components/ConfirmSheet'
 
 interface Training {
   id: number

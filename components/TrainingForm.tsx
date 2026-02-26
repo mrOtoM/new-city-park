@@ -1,13 +1,14 @@
 'use client'
 
+import { useState, useTransition } from 'react'
+import { useFormStatus } from 'react-dom'
+import { Trash2 } from 'lucide-react'
+
 import Button from '@/components/Button'
 import ConfirmSheet from '@/components/ConfirmSheet'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
 import { deleteTrainingAction } from '@/services/trainings'
-import { useState, useTransition } from 'react'
-import { useFormStatus } from 'react-dom'
-import { Trash2 } from 'lucide-react'
 
 interface TrainingData {
   id?: number
@@ -62,13 +63,12 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
 
   return (
     <div className="mx-auto max-w-6xl p-4">
-      <h1 className="mb-6 text-2xl font-semibold text-primary-50">{isEdit ? 'Upraviť tréning' : 'Nový tréning'}</h1>
+      <h1 className="text-primary-50 mb-6 text-2xl font-semibold">{isEdit ? 'Upraviť tréning' : 'Nový tréning'}</h1>
 
       <form action={action} className="space-y-6">
         {training?.id && <input type="hidden" name="id" value={training.id} />}
         <input type="hidden" name="type" value={selectedType} />
 
-        {/* Typ tréningu */}
         <div>
           <label className="text-primary-300 mb-2 block text-sm font-medium">Typ tréningu</label>
           <div className="grid grid-cols-2 gap-3">
@@ -196,7 +196,6 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
           </div>
         </div>
 
-        {/* Tlačidlá */}
         <div className="flex gap-3 pt-2">
           <Button variant="ghost" href="/trainings" className="flex-1">
             Zrušiť

@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useTraining } from './TrainingContext'
+
+import { useTraining } from '@/components/TrainingContext'
 
 interface Training {
   id: number
@@ -170,7 +171,6 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
         ))}
       </div>
 
-      {/* Calendar days */}
       <div className="grid grid-cols-7 gap-1">{renderCalendarDays()}</div>
     </div>
   )
