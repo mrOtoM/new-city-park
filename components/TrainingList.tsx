@@ -6,7 +6,7 @@ import { Pencil, Users } from 'lucide-react'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { formatDate, isDeadlinePassed } from '@/lib/utils'
 import { useTraining } from '@/components/TrainingContext'
-import { registerForTrainingAction, unregisterFromTrainingAction } from '@/services/registrations'
+import { registerForTrainingAction, unregisterFromTrainingAction } from '@/services/actions/registrations'
 import Button from '@/components/Button'
 import ConfirmSheet from '@/components/ConfirmSheet'
 

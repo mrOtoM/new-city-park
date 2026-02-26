@@ -8,7 +8,7 @@ import Button from '@/components/Button'
 import ConfirmSheet from '@/components/ConfirmSheet'
 import { TRAINING_TYPES, UNREGISTER_DEADLINE_OPTIONS } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
-import { deleteTrainingAction } from '@/services/trainings'
+import { deleteTrainingAction } from '@/services/actions/trainings'
 
 interface TrainingData {
   id?: number
@@ -53,7 +53,7 @@ function getDeadlineHoursFromTraining(training?: TrainingData): string {
 
 export default function TrainingForm({ training, action }: TrainingFormProps) {
   const isEdit = !!training?.id
-  const [selectedType, setSelectedType] = useState(training?.type || '')
+  const [selectedType, setSelectedType] = useState(training?.type || TRAINING_TYPES[0].value)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, startDeleteTransition] = useTransition()
   const [deleteError, setDeleteError] = useState('')

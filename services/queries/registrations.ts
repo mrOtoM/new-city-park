@@ -1,10 +1,13 @@
-'use server'
-
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { auth } from '@/lib/auth'
-import { getTraining } from '@/services/trainings'
-import { revalidatePath } from 'next/cache'
+import type { UserJoin } from '@/lib/types'
+
+function parseUserJoin(users: unknown): UserJoin | null {
+  if (users && typeof users === 'object' && 'fullName' in users) {
+    return users as UserJoin
+  }
+  return null
+}
 
 export async function registerForTraining(trainingId: number, userId: string) {
   const supabase = await createSupabaseServerClient()
@@ -75,15 +78,6 @@ export async function unregisterFromTraining(trainingId: number, userId: string)
   }
 }
 
-import type { UserJoin } from '@/lib/types'
-
-function parseUserJoin(users: unknown): UserJoin | null {
-  if (users && typeof users === 'object' && 'fullName' in users) {
-    return users as UserJoin
-  }
-  return null
-}
-
 export async function getTrainingParticipants(trainingId: number) {
   const { data, error } = await supabaseAdmin
     .from('training_registrations')
@@ -148,29 +142,4 @@ export async function getUserRegistrations(userId: string) {
 
   if (error) return []
   return data.map((r) => r.training_id)
-}
-
-// --- Server Actions ---
-
-export async function registerForTrainingAction(trainingId: number) {
-  const session = await auth()
-  if (!session?.user?.id) throw new Error('Unauthorized')
-
-  await registerForTraining(trainingId, session.user.id)
-  revalidatePath('/calendar')
-  revalidatePath('/trainings')
-}
-
-export async function unregisterFromTrainingAction(trainingId: number) {
-  const session = await auth()
-  if (!session?.user?.id) throw new Error('Unauthorized')
-
-  const training = await getTraining(trainingId)
-  if (training?.unregisterDeadline && new Date() > new Date(String(training.unregisterDeadline))) {
-    throw new Error('Odhlásenie už nie je možné – deadline prešiel')
-  }
-
-  await unregisterFromTraining(trainingId, session.user.id)
-  revalidatePath('/calendar')
-  revalidatePath('/trainings')
 }

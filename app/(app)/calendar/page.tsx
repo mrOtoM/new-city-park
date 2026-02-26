@@ -1,7 +1,7 @@
 import Calendar from '@/components/Calendar'
 import TrainingList from '@/components/TrainingList'
-import { getTrainings } from '@/services/trainings'
-import { getUserRegistrations, getRegistrationCounts } from '@/services/registrations'
+import { getTrainings } from '@/services/queries/trainings'
+import { getUserRegistrations, getRegistrationCounts } from '@/services/queries/registrations'
 import { auth } from '@/lib/auth'
 
 export const revalidate = 0

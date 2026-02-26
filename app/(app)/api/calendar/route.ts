@@ -1,4 +1,4 @@
-import { getTrainings } from '@/services/trainings'
+import { getTrainings } from '@/services/queries/trainings'
 
 export async function GET() {
   try {

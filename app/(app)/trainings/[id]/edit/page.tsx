@@ -1,7 +1,7 @@
 import TrainingEditTabs from '@/components/TrainingEditTabs'
-import { updateTrainingAction } from '@/services/trainings'
-import { getTraining } from '@/services/trainings'
-import { getTrainingParticipants } from '@/services/registrations'
+import { updateTrainingAction } from '@/services/actions/trainings'
+import { getTraining } from '@/services/queries/trainings'
+import { getTrainingParticipants } from '@/services/queries/registrations'
 import { auth } from '@/lib/auth'
 import { notFound, redirect } from 'next/navigation'
 

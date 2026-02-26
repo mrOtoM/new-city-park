@@ -162,7 +162,6 @@ export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
         </button>
       </div>
 
-      {/* Days of week header */}
       <div className="mb-2 grid grid-cols-7 gap-1">
         {daysOfWeek.map((day, index) => (
           <div key={index} className="text-primary-400 flex h-8 w-8 items-center justify-center text-sm">
