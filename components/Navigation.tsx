@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { CalendarDays, User, ListCheck } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
+console.log('Navigation component rendered')
+
 const navLinks = [
   {
     name: 'Kalendár',
