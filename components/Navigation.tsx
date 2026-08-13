@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CalendarDays, User, ListCheck } from 'lucide-react'
+import { BarChart3, CalendarDays, User, ListCheck } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 const navLinks = [
@@ -14,6 +14,11 @@ const navLinks = [
     name: 'Tréningy',
     href: '/trainings',
     icon: <ListCheck className="h-7 w-7" />,
+  },
+  {
+    name: 'Štatistiky',
+    href: '/statistics',
+    icon: <BarChart3 className="h-7 w-7" />,
   },
   {
     name: 'Profil',

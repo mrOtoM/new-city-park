@@ -3,7 +3,6 @@ import Button from '@/components/Button'
 import { getTrainings } from '@/services/queries/trainings'
 import { getUserRegistrations, getRegistrationCounts } from '@/services/queries/registrations'
 import { auth } from '@/lib/auth'
-import { formatDate } from '@/lib/utils'
 import { Plus } from 'lucide-react'
 
 export const revalidate = 0
@@ -17,9 +16,9 @@ export default async function TrainingsPage() {
   const role = session?.user?.role ?? 'user'
   const isAdmin = role === 'admin'
 
-  const today = formatDate(new Date(), 'yyyy-MM-dd')
+  const now = new Date()
   const currentTrainings = trainings
-    .filter((t) => t.datetime.slice(0, 10) >= today)
+    .filter((t) => new Date(t.datetime) >= now)
     .sort((a, b) => a.datetime.localeCompare(b.datetime))
 
   const [userRegistrations, registrationCounts] = await Promise.all([
