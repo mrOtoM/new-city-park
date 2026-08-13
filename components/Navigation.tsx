@@ -19,6 +19,7 @@ const navLinks = [
     name: 'Štatistiky',
     href: '/statistics',
     icon: <BarChart3 className="h-7 w-7" />,
+    adminOnly: true,
   },
   {
     name: 'Profil',
@@ -27,13 +28,14 @@ const navLinks = [
   },
 ]
 
-export default function Navigation() {
+export default function Navigation({ role = 'user' }: { role?: string }) {
   const pathname = usePathname()
+  const visibleLinks = navLinks.filter((link) => !link.adminOnly || role === 'admin')
 
   return (
     <nav className="mx-auto h-20 max-w-6xl">
       <ul className="flex h-full max-w-6xl items-center justify-between">
-        {navLinks.map((link) => (
+        {visibleLinks.map((link) => (
           <li key={link.name}>
             <Link
               className={`hover:text-primary-100 text-primary-400 flex w-24 flex-col items-center gap-y-2 font-semibold transition-colors ${
