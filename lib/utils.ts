@@ -37,6 +37,29 @@ export function formatDate(value: string | Date | null | undefined, format: stri
     .replace('mm', minutes)
 }
 
+const SK_MONTHS_NOMINATIVE = [
+  'Január',
+  'Február',
+  'Marec',
+  'Apríl',
+  'Máj',
+  'Jún',
+  'Júl',
+  'August',
+  'September',
+  'Október',
+  'November',
+  'December',
+]
+
+// Vstup je kľúč "yyyy-MM", nie dátum – nepoužívame Date, aby nezasahovala časová zóna.
+export function formatMonthKey(key: string) {
+  const [year, month] = key.split('-')
+  const label = SK_MONTHS_NOMINATIVE[Number(month) - 1]
+
+  return label ? `${label} ${year}` : key
+}
+
 export function isDeadlinePassed(deadline?: string | Date | null) {
   if (!deadline) return false
 
