@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { CalendarDays, Users, UserMinus, Percent, UserRound } from 'lucide-react'
 
+import { auth } from '@/lib/auth'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { formatDate, formatMonthKey } from '@/lib/utils'
 import {
@@ -56,6 +58,10 @@ function Bar({ value, max }: { value: number; max: number }) {
 }
 
 export default async function StatisticsPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
+  const session = await auth()
+
+  if (session?.user?.role !== 'admin') redirect('/calendar')
+
   const [{ month }, { trainings: allTrainings, registrations }] = await Promise.all([searchParams, getStatisticsData()])
 
   const months = listMonths(allTrainings)
