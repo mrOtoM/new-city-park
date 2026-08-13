@@ -16,6 +16,7 @@ export interface TrainingStat {
 export interface RegistrationStat {
   trainingId: number
   userId: string
+  userName: string
   cancelled: boolean
 }
 

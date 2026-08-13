@@ -1,13 +1,23 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import type { RegistrationStat, StatisticsData, Summary, TrainingStat, TypeStat } from '@/lib/types'
 
+function parseUserName(users: unknown) {
+  if (users && typeof users === 'object' && 'fullName' in users) {
+    return String((users as { fullName: string }).fullName) || 'Neznámy'
+  }
+  return 'Neznámy'
+}
+
 export async function getStatisticsData(): Promise<StatisticsData> {
   const [trainingsResult, registrationsResult] = await Promise.all([
     supabaseAdmin
       .from('trainings')
       .select('id, type, datetime, maxParticipants')
       .order('datetime', { ascending: false }),
-    supabaseAdmin.from('training_registrations').select('training_id, user_id, cancelled_at'),
+    supabaseAdmin
+      .from('training_registrations')
+      .select('training_id, user_id, cancelled_at, users:user_id("fullName")')
+      .order('registered_at', { ascending: true }),
   ])
 
   if (trainingsResult.error || registrationsResult.error) {
@@ -18,6 +28,7 @@ export async function getStatisticsData(): Promise<StatisticsData> {
   const registrations: RegistrationStat[] = registrationsResult.data.map((registration) => ({
     trainingId: registration.training_id,
     userId: registration.user_id,
+    userName: parseUserName(registration.users),
     cancelled: !!registration.cancelled_at,
   }))
 
@@ -39,6 +50,19 @@ export async function getStatisticsData(): Promise<StatisticsData> {
   }))
 
   return { trainings, registrations }
+}
+
+// Mená v poradí prihlásenia, zvlášť tí, čo zostali, a zvlášť odhlásení.
+export function participantNames(registrations: RegistrationStat[], trainingId: number) {
+  const active: string[] = []
+  const cancelled: string[] = []
+
+  for (const registration of registrations) {
+    if (registration.trainingId !== trainingId) continue
+    ;(registration.cancelled ? cancelled : active).push(registration.userName)
+  }
+
+  return { active, cancelled }
 }
 
 export function countUniqueParticipants(registrations: RegistrationStat[], trainingIds: Set<number>) {
