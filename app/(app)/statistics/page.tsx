@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { CalendarDays, Users, UserMinus, Percent, UserRound } from 'lucide-react'
+import { CalendarDays, ChevronRight, Users, UserMinus, Percent, UserRound } from 'lucide-react'
 
 import { auth } from '@/lib/auth'
 import { TRAINING_TYPES } from '@/lib/constants'
@@ -10,6 +10,7 @@ import {
   getStatisticsData,
   listMonths,
   monthKey,
+  participantNames,
   summarize,
   summarizeByType,
 } from '@/services/queries/statistics'
@@ -171,28 +172,62 @@ export default async function StatisticsPage({ searchParams }: { searchParams: P
       <section className="space-y-3">
         <h2 className="text-primary-50 text-lg font-semibold">Tréningy v mesiaci</h2>
         <ul className="space-y-2">
-          {finishedTrainings.map((training) => (
-            <li key={training.id} className="bg-primary-900/50 space-y-2 rounded-lg p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-primary-50 text-sm">{trainingType(training.type)?.label ?? 'Tréning'}</p>
-                  <p className="text-primary-400 text-xs">
-                    {formatDate(training.datetime)} &middot; {formatDate(training.datetime, 'HH:mm')}
-                  </p>
+          {finishedTrainings.map((training) => {
+            const names = participantNames(registrations, training.id)
+            return (
+              <li key={training.id} className="bg-primary-900/50 space-y-2 rounded-lg p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-primary-50 text-sm">{trainingType(training.type)?.label ?? 'Tréning'}</p>
+                    <p className="text-primary-400 text-xs">
+                      {formatDate(training.datetime)} &middot; {formatDate(training.datetime, 'HH:mm')}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-primary-50 text-sm">
+                      {training.participants}
+                      {training.maxParticipants ? (
+                        <span className="text-primary-500"> / {training.maxParticipants}</span>
+                      ) : null}
+                    </p>
+                    <p className="text-primary-400 text-xs">{training.cancellations} odhlásených</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-primary-50 text-sm">
-                    {training.participants}
-                    {training.maxParticipants ? (
-                      <span className="text-primary-500"> / {training.maxParticipants}</span>
-                    ) : null}
-                  </p>
-                  <p className="text-primary-400 text-xs">{training.cancellations} odhlásených</p>
-                </div>
-              </div>
-              <Bar value={training.participants} max={maxParticipants} />
-            </li>
-          ))}
+                <Bar value={training.participants} max={maxParticipants} />
+
+                {(names.active.length > 0 || names.cancelled.length > 0) && (
+                  <details className="group">
+                    <summary className="text-primary-300 hover:text-primary-100 flex cursor-pointer list-none items-center gap-1 text-xs [&::-webkit-details-marker]:hidden">
+                      <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
+                      Zobraziť prihlásených
+                    </summary>
+                    <div className="mt-2 space-y-3">
+                      {names.active.length > 0 && (
+                        <div>
+                          <p className="text-primary-400 text-xs">Prihlásení ({names.active.length})</p>
+                          <ul className="text-primary-100 mt-1 space-y-1 text-sm">
+                            {names.active.map((name, index) => (
+                              <li key={`${training.id}-a-${index}`}>{name}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {names.cancelled.length > 0 && (
+                        <div>
+                          <p className="text-primary-400 text-xs">Odhlásení ({names.cancelled.length})</p>
+                          <ul className="text-primary-400 mt-1 space-y-1 text-sm line-through">
+                            {names.cancelled.map((name, index) => (
+                              <li key={`${training.id}-c-${index}`}>{name}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                )}
+              </li>
+            )
+          })}
         </ul>
       </section>
     </div>
