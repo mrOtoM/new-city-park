@@ -3,8 +3,8 @@
 import Image from 'next/image'
 import bg6 from '@/public/bg6.png'
 import Link from 'next/link'
-import Button from '@/components/Button'
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import Button from '@/components/ui/Button'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 

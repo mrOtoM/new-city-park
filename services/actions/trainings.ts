@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { supabaseAdmin } from '@/lib/supabase'
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingCancelledEmails } from '@/lib/email'
 import { buildDeadlineISO, computeDeadlineFromTraining, formatDate } from '@/lib/utils'

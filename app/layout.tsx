@@ -1,7 +1,7 @@
 import './globals.css'
 
 import { Josefin_Sans } from 'next/font/google'
-import ThemeProvider from '@/components/ThemeProvider'
+import ThemeProvider from '@/components/providers/ThemeProvider'
 
 const josefin = Josefin_Sans({
   subsets: ['latin'],

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/dal'
 import { getTraining } from '@/services/queries/trainings'
 import { registerForTraining, unregisterFromTraining } from '@/services/queries/registrations'
 
