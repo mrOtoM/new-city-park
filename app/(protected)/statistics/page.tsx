@@ -49,7 +49,7 @@ function SummaryCard({
 }
 
 function Bar({ value, max }: { value: number; max: number }) {
-  const width = max > 0 ? Math.max((value / max) * 100, value > 0 ? 4 : 0) : 0
+  const width = max > 0 ? Math.min(Math.max((value / max) * 100, value > 0 ? 4 : 0), 100) : 0
 
   return (
     <div className="bg-primary-800/60 h-2 w-full overflow-hidden rounded-full">
@@ -89,7 +89,8 @@ export default async function StatisticsPage({ searchParams }: { searchParams: P
   const summary = summarize(finishedTrainings)
   const uniqueParticipants = countUniqueParticipants(registrations, new Set(finishedTrainings.map((t) => t.id)))
   const types = summarizeByType(finishedTrainings)
-  const maxParticipants = Math.max(1, ...finishedTrainings.map((training) => training.participants))
+  // Tréning bez kapacity nemá vlastné 100 %, preto sa porovnáva s najvyššou účasťou v mesiaci.
+  const peakParticipants = Math.max(1, ...finishedTrainings.map((training) => training.participants))
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4">
@@ -193,7 +194,7 @@ export default async function StatisticsPage({ searchParams }: { searchParams: P
                     <p className="text-primary-400 text-xs">{training.cancellations} odhlásených</p>
                   </div>
                 </div>
-                <Bar value={training.participants} max={maxParticipants} />
+                <Bar value={training.participants} max={training.maxParticipants ?? peakParticipants} />
 
                 {(names.active.length > 0 || names.cancelled.length > 0) && (
                   <details className="group">

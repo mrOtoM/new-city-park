@@ -35,7 +35,11 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
 }
 
 const inputClass =
-  'bg-primary-800 border-primary-700 text-primary-50 placeholder:text-primary-600 focus:border-primary-500 focus:ring-primary-500 w-full rounded-lg border px-4 py-3 focus:ring-1 focus:outline-none'
+  'bg-primary-800 border-primary-700 text-primary-50 placeholder:text-primary-600 focus:border-primary-500 focus:ring-primary-500 w-full min-w-0 rounded-lg border px-4 py-3 focus:ring-1 focus:outline-none'
+
+// iOS Safari dáva natívnym date/time vstupom vlastnú šírku a hodnotu centruje,
+// takže sa v dvojstĺpcovom rozložení prekrýva s ikonou.
+const dateTimeInputClass = `${inputClass} appearance-none px-3 text-base [&::-webkit-date-and-time-value]:text-left [&::-webkit-datetime-edit]:min-w-0`
 
 function getDeadlineHoursFromTraining(training?: TrainingData): string {
   if (!training?.datetime || !training?.unregisterDeadline) return ''
@@ -92,8 +96,8 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
             <label htmlFor="date" className="text-primary-300 mb-2 block text-sm font-medium">
               Dátum
             </label>
@@ -103,10 +107,10 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
               type="date"
               required
               defaultValue={training?.datetime ? formatDate(training.datetime, 'yyyy-MM-dd') : ''}
-              className={inputClass}
+              className={dateTimeInputClass}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label htmlFor="time" className="text-primary-300 mb-2 block text-sm font-medium">
               Čas
             </label>
@@ -116,7 +120,7 @@ export default function TrainingForm({ training, action }: TrainingFormProps) {
               type="time"
               required
               defaultValue={training?.datetime ? formatDate(training.datetime, 'HH:mm') : ''}
-              className={inputClass}
+              className={dateTimeInputClass}
             />
           </div>
         </div>

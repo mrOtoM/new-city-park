@@ -101,6 +101,9 @@ that it is currently checked out.
 - `SUPABASE_SERVICE_ROLE_KEY` is server-only and bypasses RLS.
 - `NEXT_PUBLIC_SITE_URL` builds Supabase auth redirect links and must match the
   environment. A mismatch breaks password resets silently.
+- `RESEND_API_KEY` and `EMAIL_FROM` drive transactional email from
+  `lib/email.ts`. Without the key, sending is skipped silently and no user
+  operation fails.
 - Verify the active Supabase URL before executing any SQL or data-changing
   operation.
 
