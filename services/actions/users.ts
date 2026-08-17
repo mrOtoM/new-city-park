@@ -3,8 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { auth } from '@/lib/auth'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { auth } from '@/lib/auth/dal'
 import { updateUserPhone } from '@/services/queries/users'
 
 export async function signOutAction() {

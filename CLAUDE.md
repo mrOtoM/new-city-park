@@ -4,14 +4,66 @@ This file contains repository instructions for AI coding agents and other
 automated assistants working in this project. `CLAUDE.md` and `AGENTS.md` are
 kept identical — edit both, or neither.
 
-## Main technical instructions
+## Required reading order
 
-Full coding standards, architecture, and conventions live in
-`.github/copilot-instructions.md`. Read it before any non-trivial code change.
+Read these documents before any non-trivial change:
+
+1. `.github/copilot-instructions.md` for general coding and UI conventions;
+2. `docs/01-application-architecture-overview.md` for the normative repository
+   structure, ownership boundaries, and file-placement rules;
+3. `docs/02-authentication-authorization-overview.md` before changing identity,
+   sessions, roles, permissions, Supabase clients, RLS, protected data, Server
+   Actions, Route Handlers, or auth UI;
+4. `docs/03-ui-design-system-overview.md` before changing styling, tokens,
+   components, forms, responsive behavior, interaction states, or accessibility;
+5. `docs/04-engineering-quality-overview.md` before implementation, validation,
+   error handling, logging, dependencies, tests, configuration, or handoff;
+6. the relevant file under `docs/plans/` when implementing planned work.
+
+Overview documents define the intended long-lived architecture, security, UI,
+and engineering-quality invariants. Plans define temporary migration steps and
+do not override an overview. The repository remains the source of truth for
+what is implemented right now; when it differs from an overview, inspect the
+related plan and do not assume the migration is complete.
 
 > Caveat: that file is partly out of date — it describes NextAuth,
 > `app/_components/`, `app/_lib/`, `date-fns`, and heroicons, none of which
-> exist here. When it conflicts with the repository, the repository wins.
+> exist here. The four project overview documents above override its stale
+> architecture and authentication examples. When factual implementation
+> details conflict with the repository, the repository wins.
+
+## Current architecture baseline
+
+- Repository Architecture Hardening master plan `003` is completed on the
+  `development` branch: blocks `B1`, `B2`, and `B3` were implemented and
+  verified in order.
+- The current route, component, auth, and Supabase module paths reflect the
+  approved architecture. This completion covers file ownership and imports,
+  not authentication or authorization behavior.
+- `ARCH-004` remains open for the unresolved choice between the two pages that
+  map to `/`; do not silently choose a product behavior while doing unrelated
+  work.
+- Security implementation remains governed by plan `001` and overview `02`.
+
+## Deferred work registers
+
+Every overview under `docs/` ends with a `Deferred work register`. When a
+material, verified problem is discovered outside the authorized scope of the
+current task:
+
+- add or update it in the one overview that owns the concern;
+- use that overview's ID prefix: `ARCH-*`, `AUTH-*`, `UI-*`, or `ENG-*`;
+- search all registers first and do not duplicate the same finding;
+- record only repository facts with a concrete correction/exit condition, not
+  speculative improvements;
+- link the owning plan and block when implementation has been approved;
+- leave it `Open` when no implementation plan exists;
+- do not fix it merely because it was recorded;
+- remove it only in the same change that verifies the issue is resolved.
+
+The register is a visibility index, not a substitute for a scoped
+implementation plan. Detailed sequence, tests, deployment, and rollback remain
+in `docs/plans/`.
 
 ## Read this before changing files
 
