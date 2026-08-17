@@ -136,6 +136,24 @@ verify contrast in both themes.
 - Mobile and desktop variants of one interaction must expose equivalent
   semantics, controls, and keyboard behavior.
 
+### Native date and time inputs
+
+`input[type="date"]` and `input[type="time"]` do not shrink like ordinary
+inputs. iOS Safari gives them an intrinsic minimum width and centers the value
+through `::-webkit-date-and-time-value`, so a two-column grid overlaps the value
+with the native indicator. Such a field requires:
+
+- `min-w-0` on both the input and its grid or flex parent, because `w-full`
+  alone cannot shrink below the intrinsic width;
+- `[&::-webkit-date-and-time-value]:text-left` so the value follows the field's
+  own alignment;
+- a single-column layout on the smallest viewport, widened with `sm:` only when
+  both fields verifiably fit;
+- a `16px` font size, since a smaller size makes iOS Safari zoom on focus.
+
+Verify a change to these fields on a real iOS device; desktop Chrome does not
+reproduce the defect.
+
 ## Canonical component catalogue
 
 The paths below are approved target locations from the architecture overview.
@@ -145,7 +163,8 @@ the canonical locations below are now the current implementation paths.
 | Need                                      | Canonical component | Target ownership                           |
 | ----------------------------------------- | ------------------- | ------------------------------------------ |
 | Button or button-styled internal link     | `Button`            | `components/ui/Button.tsx`                 |
-| Page or section loading indicator         | `Spinner`           | `components/ui/Spinner.tsx`                |
+| Pending in-place action indicator         | `Spinner`           | `components/ui/Spinner.tsx`                |
+| Route or section loading placeholder      | `Skeleton`          | `components/ui/Skeleton.tsx`               |
 | Destructive or consequential confirmation | `ConfirmSheet`      | `components/ui/ConfirmSheet.tsx`           |
 | Root light/dark theme context             | `ThemeProvider`     | `components/providers/ThemeProvider.tsx`   |
 | Authenticated training selection context  | `TrainingContext`   | `components/providers/TrainingContext.tsx` |
@@ -157,6 +176,12 @@ the canonical locations below are now the current implementation paths.
 `Calendar`, `TrainingForm`, `TrainingEditTabs`, and `TrainingList` are domain or
 route components, not general UI primitives. Do not extend them to solve an
 unrelated generic UI need.
+
+A route skeleton is composed from the `Skeleton` primitive and owned at the same
+boundary as the layout it mirrors: `TrainingListSkeleton` beside `TrainingList`,
+`CalendarSkeleton` and `StatisticsSkeleton` in their route `_components/`, and
+`TrainingFormSkeleton` in the shared `trainings` route subtree consumed by both
+the create and edit routes.
 
 ### Reuse decision before creating a component
 
@@ -200,6 +225,25 @@ props on the canonical primitive.
   replacing the entire page.
 - A loading indicator must have an accessible status or accompanying text when
   the context is not already clear.
+
+Choose the indicator by what is loading:
+
+| Situation                                            | Required indicator                |
+| ---------------------------------------------------- | --------------------------------- |
+| Route or section whose layout is known in advance    | `Skeleton`-composed placeholder   |
+| Pending button, form submit, or other in-place action | `Spinner` or button loading state |
+| Route whose layout is unknown, such as the root shell | `Spinner`                         |
+
+Skeleton rules:
+
+- A skeleton mirrors the real layout's element count, sizes, and spacing so the
+  resolved page does not shift; a generic block is not an acceptable skeleton.
+- Every route that can suspend has a `loading.tsx`; a missing one silently falls
+  back to the nearest ancestor and loses the page shape.
+- The `loading.tsx` root exposes `role="status"`, `aria-busy="true"`, and a
+  Slovak `aria-label`; individual `Skeleton` blocks stay `aria-hidden`.
+- A skeleton contains no real or placeholder text content and no interactive
+  controls.
 
 ### Empty
 

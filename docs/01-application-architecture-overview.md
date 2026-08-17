@@ -187,6 +187,34 @@ Do not turn `lib/` into a catch-all for feature code. A helper used by one
 route stays with that route; a helper used by one service stays beside that
 service.
 
+### Transactional email
+
+`lib/email.ts` owns every outgoing transactional message and is the only module
+that may talk to Resend. It exposes one function per notification and shares a
+single `emailLayout` shell so message chrome stays consistent.
+
+Implemented notifications:
+
+| Trigger                         | Function                        | Recipients              |
+| ------------------------------- | ------------------------------- | ----------------------- |
+| A user registers for a training | `sendTrainingRegistrationEmail` | the registering user    |
+| An admin deletes a training     | `sendTrainingCancelledEmails`   | all active participants |
+
+Invariants:
+
+- Only `services/actions/` triggers an email, after the database write has
+  succeeded; queries and UI components must not send mail.
+- Sending is fire-and-forget and its failure never fails the user operation, as
+  required by the retry rules in the engineering-quality overview.
+- All interpolated values are HTML-escaped before they reach a template.
+- A missing `RESEND_API_KEY` or empty recipient list is a silent no-op, so local
+  development works without mail credentials.
+- Copy is Slovak; `EMAIL_FROM` sets the sender and falls back to a project
+  default.
+
+Changing a training does not notify anyone, and there is no cancelled training
+state — deletion is the only cancellation path today.
+
 ### `services/`
 
 - `services/queries/` contains application data reads.
