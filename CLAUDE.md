@@ -44,6 +44,10 @@ related plan and do not assume the migration is complete.
   map to `/`; do not silently choose a product behavior while doing unrelated
   work.
 - Security implementation remains governed by plan `001` and overview `02`.
+- Plan `001` block `B1` (test foundation and pure role/capability contracts)
+  is implemented: `npm test` runs Vitest over `tests/unit/`, and
+  `lib/auth/roles.ts` plus `lib/auth/auth-result.ts` hold the pure contracts.
+  They are not wired into `lib/auth/dal.ts` yet; that is `B3`. `B2` is next.
 
 ## Deferred work registers
 

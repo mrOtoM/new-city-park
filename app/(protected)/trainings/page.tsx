@@ -26,21 +26,14 @@ export default async function TrainingsPage() {
     getRegistrationCounts(),
   ])
 
-  const visibleTrainings = isAdmin
-    ? currentTrainings
-    : currentTrainings.filter((t) => userRegistrations.includes(t.id))
+  // Server filtruje pre správny prvý render; klient rovnaké pravidlo drží optimisticky.
+  const visibleTrainings = isAdmin ? currentTrainings : currentTrainings.filter((t) => userRegistrations.includes(t.id))
 
   return (
     <div className="mx-auto max-w-6xl">
       {isAdmin && (
         <div className="p-4 pb-0">
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            href="/trainings/new"
-            icon={<Plus className="h-5 w-5" />}
-          >
+          <Button variant="primary" size="lg" fullWidth href="/trainings/new" icon={<Plus className="h-5 w-5" />}>
             Pridať tréning
           </Button>
         </div>
@@ -49,6 +42,7 @@ export default async function TrainingsPage() {
         trainings={visibleTrainings}
         role={role}
         showAll
+        onlyRegistered={!isAdmin}
         userRegistrations={userRegistrations}
         registrationCounts={registrationCounts}
       />

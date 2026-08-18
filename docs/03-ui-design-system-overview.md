@@ -215,6 +215,29 @@ props on the canonical primitive.
   client-only library require them.
 - Avoid barrel exports that obscure client/server boundaries.
 
+### Server data in client state
+
+Server-rendered data has exactly one source of truth: the prop. Copying it into
+`useState` creates a second truth that never resyncs, because the initial value
+is read only on mount. The visible symptom is a mutation that updates local
+state instantly while the list, count, or value it belongs to keeps the old
+server data until revalidation lands.
+
+- Do not seed `useState` with a prop in order to display that prop.
+- Render an in-flight mutation with `useOptimistic` over the prop; React
+  discards the optimistic value when the transition ends and reverts it
+  automatically when the action throws, so no manual rollback is needed.
+- Call the optimistic update inside `startTransition`, before awaiting the
+  Server Action.
+- One mutation updates one optimistic state. Membership, counts, and labels
+  derived from the same mutation must not be tracked separately, or they will
+  disagree mid-flight.
+- Seeding `useState` from a prop remains correct for an editable draft the user
+  can still discard, such as a form field, as long as the displayed value stays
+  the prop.
+- A client component may mirror a server filter only to keep an optimistic view
+  consistent, through an explicit prop that names the rule.
+
 ## Standard interaction states
 
 ### Loading
