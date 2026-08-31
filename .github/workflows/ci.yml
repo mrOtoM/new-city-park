@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [development, main]
+  push:
+    branches: [development]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      # Zástupné hodnoty. lib/supabase.ts vyhodí chybu, ak premenné chýbajú,
+      # takže build bez nich neprejde. Do žiadnej databázy sa nepripájame.
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run build

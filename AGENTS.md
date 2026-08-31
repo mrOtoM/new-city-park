@@ -1,8 +1,8 @@
 # Repository instructions for AI agents
 
-This file contains repository instructions for AI coding agents and other
-automated assistants working in this project. `CLAUDE.md` and `AGENTS.md` are
-kept identical — edit both, or neither.
+This file is the single source of repository instructions for AI coding agents
+and other automated assistants working in this project. `CLAUDE.md` only points
+here — put every instruction in this file and never duplicate content there.
 
 ## Required reading order
 
@@ -47,7 +47,20 @@ related plan and do not assume the migration is complete.
 - Plan `001` block `B1` (test foundation and pure role/capability contracts)
   is implemented: `npm test` runs Vitest over `tests/unit/`, and
   `lib/auth/roles.ts` plus `lib/auth/auth-result.ts` hold the pure contracts.
-  They are not wired into `lib/auth/dal.ts` yet; that is `B3`. `B2` is next.
+- Plan `001` block `B2` (three-role data model and registration invariant) is
+  implemented and verified on the development database; the seven behavioral
+  test cases and their results are recorded in
+  `docs/plans/007-authorization-authentication-implementation-b2-plan.md`.
+  `public.users.role` is constrained to `user`, `admin`, and `owner`, and the
+  last owner cannot be demoted or deleted.
+- Server-side admin checks use `hasAdminCapabilities()` from
+  `lib/auth/roles.ts`, so `admin` and `owner` currently have identical
+  application rights. Add an owner-only capability in `roles.ts` and check it
+  with `can()` at the specific call site; do not reintroduce
+  `role === 'admin'` comparisons.
+- `lib/auth/dal.ts` still resolves roles itself and is not fail-closed; that is
+  `B3`, which is next. Database admin RLS policies still match `'admin'` only,
+  which `B5` must fix before `B4` moves user data off the service-role client.
 
 ## Deferred work registers
 
@@ -118,6 +131,56 @@ that it is currently checked out.
 - Do not run a development migration against production merely to verify it.
 - No ORM. Solve complex queries with a Postgres view or `.rpc()`, not by
   chaining joins in JavaScript.
+
+### Migration workflow
+
+Migrations live in `supabase/migrations/` and are applied with the Supabase
+CLI, which is a dev dependency. File names must keep the CLI's
+`<timestamp>_name.sql` format; a file that does not match is silently ignored.
+
+Create and apply:
+
+```bash
+npx supabase migration new <name>
+npx supabase db push
+```
+
+`db push` applies only migrations not yet recorded in
+`supabase_migrations.schema_migrations` on the target project.
+
+One-time setup per machine, performed by a human because it needs credentials:
+
+```bash
+npx supabase login
+npx supabase link --project-ref <ref>
+```
+
+The schema predates the CLI: `20260214140608_initial_setup.sql` was applied by
+hand in the SQL Editor and is absent from the migration history. Before the
+first `db push` against a project that already has that schema, mark it as
+applied so the CLI does not re-run it:
+
+```bash
+npx supabase migration repair --status applied 20260214140608
+```
+
+Verify the linked project before every `db push`. The CLI applies to whichever
+project is linked, and linking is machine-local state the repository cannot
+see.
+
+### Migration style
+
+- Write migration comments in English, unlike user-facing copy, which stays
+  Slovak.
+- Keep migrations clean. A short numbered section header is enough; do not
+  narrate what a statement does when the SQL already says it.
+- Comment only what the SQL cannot express: why a decision was made, a
+  cross-block dependency, or a constraint that is deliberately not enforced
+  here.
+- Match the structure of `supabase/migrations/20260214140608_initial_setup.sql`.
+- `supabase/migrations/20260831110000_three_role_model.sql` is over-commented
+  and predates this rule. It is left as it is; do not use it as the style
+  reference.
 
 ## Project conventions
 
