@@ -3,6 +3,7 @@ import Button from '@/components/ui/Button'
 import { getTrainings } from '@/services/queries/trainings'
 import { getUserRegistrations, getRegistrationCounts } from '@/services/queries/registrations'
 import { auth } from '@/lib/auth/dal'
+import { hasAdminCapabilities } from '@/lib/auth/roles'
 import { Plus } from 'lucide-react'
 
 export const revalidate = 0
@@ -14,7 +15,7 @@ export const metadata = {
 export default async function TrainingsPage() {
   const [trainings, session] = await Promise.all([getTrainings(), auth()])
   const role = session?.user?.role ?? 'user'
-  const isAdmin = role === 'admin'
+  const isAdmin = hasAdminCapabilities(role)
 
   const now = new Date()
   const currentTrainings = trainings

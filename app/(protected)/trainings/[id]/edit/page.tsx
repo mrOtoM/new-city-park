@@ -4,11 +4,12 @@ import { removeParticipantAction } from '@/services/actions/registrations'
 import { getTraining } from '@/services/queries/trainings'
 import { getTrainingParticipants } from '@/services/queries/registrations'
 import { auth } from '@/lib/auth/dal'
+import { hasAdminCapabilities } from '@/lib/auth/roles'
 import { notFound, redirect } from 'next/navigation'
 
 export default async function EditTrainingPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
-  if (session?.user?.role !== 'admin') redirect('/calendar')
+  if (!hasAdminCapabilities(session?.user?.role)) redirect('/calendar')
 
   const { id } = await params
   const [training, participants] = await Promise.all([getTraining(Number(id)), getTrainingParticipants(Number(id))])

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 
 import { supabaseAdmin } from '@/lib/supabase'
 import { auth } from '@/lib/auth/dal'
+import { hasAdminCapabilities } from '@/lib/auth/roles'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingCancelledEmails } from '@/lib/email'
 import { buildDeadlineISO, computeDeadlineFromTraining, formatDate } from '@/lib/utils'
@@ -34,7 +35,7 @@ function extractTrainingData(formData: FormData) {
 export async function createTrainingAction(formData: FormData) {
   const session = await auth()
 
-  if (session?.user?.role !== 'admin') throw new Error('Unauthorized')
+  if (!hasAdminCapabilities(session?.user?.role)) throw new Error('Unauthorized')
 
   const newTraining = extractTrainingData(formData)
 
@@ -52,7 +53,7 @@ export async function createTrainingAction(formData: FormData) {
 export async function updateTrainingAction(formData: FormData) {
   const session = await auth()
 
-  if (session?.user?.role !== 'admin') throw new Error('Unauthorized')
+  if (!hasAdminCapabilities(session?.user?.role)) throw new Error('Unauthorized')
 
   const id = Number(formData.get('id'))
 
@@ -74,7 +75,7 @@ export async function updateTrainingAction(formData: FormData) {
 export async function deleteTrainingAction(trainingId: number) {
   const session = await auth()
 
-  if (session?.user?.role !== 'admin') throw new Error('Unauthorized')
+  if (!hasAdminCapabilities(session?.user?.role)) throw new Error('Unauthorized')
 
   const [training, participants] = await Promise.all([getTraining(trainingId), getTrainingParticipants(trainingId)])
 

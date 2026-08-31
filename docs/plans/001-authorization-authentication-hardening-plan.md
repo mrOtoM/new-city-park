@@ -86,7 +86,10 @@ The first detailed block file is `002` and implements `B1`. Future block files
 receive the next available plan prefix while retaining their block identifier.
 
 `B1` is implemented and verified; the implementation record is in `002`.
-`B2` is the next block and has no detailed block file yet.
+`B2` is implemented and verified on the development database; the
+implementation record is in
+`007-authorization-authentication-implementation-b2-plan.md`. `B3` is the next
+block and has no detailed block file yet.
 
 ## B1 - Test foundation and pure authorization/authentication contracts
 
