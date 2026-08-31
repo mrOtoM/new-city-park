@@ -1,6 +1,18 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Klient sa vytvára až pri odoslaní. `new Resend(undefined)` vyhodí výnimku,
+// a na úrovni modulu by tým zhodil build aj import v prostredí bez kľúča.
+let client: Resend | null = null
+
+function resendClient() {
+  const apiKey = process.env.RESEND_API_KEY
+
+  if (!apiKey) return null
+
+  client ??= new Resend(apiKey)
+
+  return client
+}
 
 const FROM_EMAIL = process.env.EMAIL_FROM || 'New City Park <noreply@newcitypark.sk>'
 
@@ -25,7 +37,9 @@ export async function sendTrainingRegistrationEmail(
   trainingDatetime: string,
   unregisterDeadline?: string | null,
 ) {
-  if (!process.env.RESEND_API_KEY || !participant.email) return
+  const resend = resendClient()
+
+  if (!resend || !participant.email) return
 
   const safeName = escapeHtml(participant.name)
   const safeLabel = escapeHtml(trainingLabel)
@@ -62,7 +76,9 @@ export async function sendTrainingCancelledEmails(
   trainingLabel: string,
   trainingDatetime: string,
 ) {
-  if (!process.env.RESEND_API_KEY || participants.length === 0) return
+  const resend = resendClient()
+
+  if (!resend || participants.length === 0) return
 
   const results = await Promise.allSettled(
     participants.map(async (p) => {
