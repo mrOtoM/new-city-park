@@ -75,6 +75,40 @@ preserved.
 PostgreSQL superuser, does not receive `BYPASSRLS`, and is not equivalent to a
 Supabase service-role or secret key.
 
+### Manual promotion and demotion procedure
+
+This is the only approved way to change `public.users.role`. It runs in the
+Supabase SQL Editor of the target project, never from application code.
+
+1. Verify the target environment before running anything. Confirm the project
+   in the Supabase dashboard and that its URL matches the intended environment.
+   Do not promote in production merely to test the statement.
+2. Read the current state and confirm the account is the intended one:
+
+   ```sql
+   SELECT id, email, role FROM public.users WHERE email = 'osoba@example.com';
+   ```
+
+3. Promote or demote by explicit `id`, never by a `LIKE` pattern or an
+   unfiltered predicate:
+
+   ```sql
+   UPDATE public.users SET role = 'admin' WHERE id = '<uuid>';
+   ```
+
+   Allowed values are `user`, `admin`, and `owner`; the
+   `users_role_allowed_values` constraint rejects anything else.
+4. Verify the result with the same `SELECT` and confirm exactly one row
+   changed.
+5. Record who ran the change, when, on which environment, for which account,
+   and why.
+
+Demoting or deleting the last remaining `owner` fails with a
+`restrict_violation` raised by the `enforce_last_owner` trigger. This is
+intentional. Promote the replacement owner first, then demote the previous one.
+Because `public.users.id` references `auth.users` with `ON DELETE CASCADE`, the
+same guard also blocks deleting the last owner's authentication account.
+
 ## Request authorization flow
 
 ```text
@@ -276,7 +310,6 @@ determine implementation status.
 
 | ID         | Deferred finding and exit condition                                                                                                                                                                                 | Status  | Tracking                    |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------- |
-| `AUTH-002` | The three-role database model, literal `user` provisioning, manual-only promotion, and last-owner invariant are not fully enforced/tested.                                                                          | Planned | Plan `001` B2               |
 | `AUTH-003` | The auth helper is not request-cached and a missing/unknown profile role can fail open as `user`; protected entry points are not consistently DAL-guarded.                                                          | Planned | Plan `001` B3               |
 | `AUTH-004` | Regular-user and privileged paths use the mixed `lib/supabase.ts`; the privileged client can fall back to anon. Resolve when regular-user paths use cookie-bound RLS and privileged access is isolated/fail-closed. | Planned | Plan `001` B4               |
 | `AUTH-005` | RLS, grants, protected user columns, owner/admin policies, and `SECURITY DEFINER` boundaries require real database enforcement tests.                                                                               | Planned | Plan `001` B5               |

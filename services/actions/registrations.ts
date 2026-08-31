@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 
 import { auth } from '@/lib/auth/dal'
+import { hasAdminCapabilities } from '@/lib/auth/roles'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingRegistrationEmail } from '@/lib/email'
 import { formatDate } from '@/lib/utils'
@@ -57,7 +58,7 @@ export async function unregisterFromTrainingAction(trainingId: number) {
 export async function removeParticipantAction(trainingId: number, userId: string) {
   const session = await auth()
 
-  if (session?.user?.role !== 'admin') throw new Error('Unauthorized')
+  if (!hasAdminCapabilities(session?.user?.role)) throw new Error('Unauthorized')
   if (!Number.isInteger(trainingId)) throw new Error('Neplatné ID tréningu')
   if (!userId) throw new Error('Neplatné ID účastníka')
 
