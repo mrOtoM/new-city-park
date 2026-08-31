@@ -26,11 +26,13 @@ do not override an overview. The repository remains the source of truth for
 what is implemented right now; when it differs from an overview, inspect the
 related plan and do not assume the migration is complete.
 
-> Caveat: that file is partly out of date — it describes NextAuth,
-> `app/_components/`, `app/_lib/`, `date-fns`, and heroicons, none of which
-> exist here. The four project overview documents above override its stale
-> architecture and authentication examples. When factual implementation
-> details conflict with the repository, the repository wins.
+> Caveat: its tech-stack and project-structure sections were corrected, but its
+> code examples still come from an unrelated cabins/bookings tutorial and show
+> NextAuth, `app/_components/`, `app/_lib/`, `date-fns`, and heroicons, none of
+> which exist here. Read those examples for style only. The four project
+> overview documents above override its stale architecture and authentication
+> examples, and where factual details conflict with the repository, the
+> repository wins. Tracked as `ENG-002`.
 
 ## Current architecture baseline
 

@@ -5,6 +5,14 @@
 > modifying, or reviewing code. The goal is clean, minimal, readable code
 > with zero unnecessary complexity.
 
+> **Warning about the code examples below.** Sections 2 and 3 describe this
+> repository accurately. Many examples further down do not: they come from an
+> unrelated cabins/bookings tutorial and show NextAuth, `app/_lib/`,
+> `app/_components/`, `date-fns`, and heroicons, none of which exist here. Read
+> them for style only, never for imports, paths, or auth patterns. Tracked as
+> `ENG-002` in `docs/04-engineering-quality-overview.md`. When this file
+> conflicts with the repository, the repository wins.
+
 ---
 
 ## Table of Contents
@@ -47,17 +55,22 @@
 
 ## 2. Tech Stack
 
-| Layer            | Technology                          |
-|------------------|-------------------------------------|
-| Framework        | Next.js 14+ (App Router)            |
-| Language         | TypeScript (strict mode)            |
-| UI Library       | React 18+                           |
-| Styling          | Tailwind CSS                        |
-| Database         | Supabase                            |
-| Authentication   | NextAuth v5                         |
-| Date Utilities   | date-fns                            |
-| Icons            | @heroicons/react (24/solid)         |
-| Date Picker      | react-day-picker                    |
+| Layer            | Technology                                    |
+|------------------|-----------------------------------------------|
+| Framework        | Next.js 16 (App Router)                       |
+| Language         | TypeScript (strict mode)                      |
+| UI Library       | React 19                                      |
+| Styling          | Tailwind CSS v4                               |
+| Database         | Supabase (PostgreSQL + RLS)                   |
+| Authentication   | Supabase Auth via `@supabase/ssr`             |
+| Email            | Resend                                        |
+| Icons            | lucide-react                                  |
+| Theming          | next-themes                                   |
+| Tests            | Vitest (`tests/unit/`)                        |
+| Migrations       | Supabase CLI (`supabase/migrations/`)         |
+
+There is no NextAuth, no date-fns, and no heroicons in this project. Date
+helpers live in `lib/utils.ts`.
 
 Do NOT introduce new dependencies without explicit approval. Prefer native
 platform APIs and existing dependencies over adding new packages.
@@ -68,29 +81,38 @@ platform APIs and existing dependencies over adding new packages.
 
 ```
 app/
-├── _components/        # Shared React components (prefixed _ = non-route)
-├── _lib/               # Utilities, services, server actions, DB client
-├── _styles/            # Global CSS (Tailwind directives, overrides)
-├── (routes)/           # Route groups and pages
-│   ├── page.tsx        # Page component
-│   ├── layout.tsx      # Layout component
-│   ├── loading.tsx     # Loading UI (Suspense fallback)
-│   ├── error.tsx       # Error boundary
-│   └── not-found.tsx   # 404 page
-├── api/                # API route handlers (use sparingly)
+├── (public)/           # Unauthenticated routes: login, register, reset
+├── (protected)/        # Authenticated routes: calendar, trainings, profile
+│   └── **/_components/ # Route-local components
+├── api/                # Route Handlers (use sparingly)
+├── auth/               # Supabase auth callback
+├── globals.css         # Tailwind and design tokens
 ├── layout.tsx          # Root layout
-├── page.tsx            # Homepage
-└── middleware.ts        # Edge middleware
-public/                 # Static assets (images, fonts)
+└── page.tsx            # Homepage
+components/             # Shared UI components
+lib/
+├── auth/               # Auth DAL, roles, capability contracts
+├── supabase/           # Client boundaries (browser / server / privileged)
+└── utils.ts            # Date and formatting helpers
+services/
+├── queries/            # Reads
+└── actions/            # Writes (Server Actions)
+supabase/migrations/    # Database migrations
+tests/unit/             # Vitest unit tests
+proxy.ts                # Session refresh and routing checks (Next.js 16)
+public/                 # Static assets
 ```
 
 **Rules:**
-- Components go in `app/_components/`. One component per file.
-- Utility functions and services go in `app/_lib/`.
-- Use `_` prefix for non-route directories inside `app/`.
+- Shared components go in `components/`. One component per file.
+- Route-local components go in a `_components/` folder beside the route.
+- Reads go in `services/queries/`, writes in `services/actions/`.
 - Pages are always `page.tsx`. Layouts are always `layout.tsx`.
+- Routing uses `proxy.ts`, not `middleware.ts`.
 - Co-locate related files. Keep things close to where they are used.
 - Do NOT create deeply nested folder hierarchies.
+- `docs/01-application-architecture-overview.md` is the normative source for
+  file placement; this section summarises it.
 
 ---
 

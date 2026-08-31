@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# New City Park
 
-## Getting Started
+Training calendar and registration application. Members browse and register for
+trainings; administrators manage trainings, participants, and statistics.
+User-facing copy is Slovak.
 
-First, run the development server:
+## Quick start
+
+```bash
+npm install
+```
+
+Copy `.env.example` to `.env` and fill in the values from the **development**
+Supabase project.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs at [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command              | Purpose                                                     |
+| -------------------- | ----------------------------------------------------------- |
+| `npm run dev`        | Development server (Turbopack)                              |
+| `npm run build`      | Production build                                            |
+| `npm start`          | Serve the production build                                  |
+| `npm test`           | Vitest unit suite over `tests/unit/`                        |
+| `npm run test:watch` | Vitest in watch mode                                        |
+| `npm run db:backup`  | Local data-only dump of the linked database into `backups/` |
 
-## Learn More
+`npm run lint` is currently broken: it calls `next lint`, which Next.js 16
+removed. Tracked as `ENG-001` in `docs/04-engineering-quality-overview.md`.
 
-To learn more about Next.js, take a look at the following resources:
+## Technologies
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework**: Next.js 16 (App Router), React 19, TypeScript
+- **Styling**: Tailwind CSS v4, design tokens in `app/globals.css`
+- **Backend**: Supabase — Auth, PostgreSQL, Row Level Security
+- **Email**: Resend
+- **Tests**: Vitest
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+| Directory              | Purpose                                                |
+| ---------------------- | ------------------------------------------------------ |
+| `app/(public)/`        | Unauthenticated routes: login, register, password reset |
+| `app/(protected)/`     | Authenticated routes: calendar, trainings, profile      |
+| `app/api/`             | Route Handlers                                          |
+| `components/`          | Shared UI components                                    |
+| `lib/auth/`            | Auth DAL, roles, and capability contracts               |
+| `lib/supabase/`        | Supabase client boundaries                              |
+| `services/queries/`    | Reads                                                   |
+| `services/actions/`    | Writes (Server Actions)                                 |
+| `supabase/migrations/` | Database migrations                                     |
+| `tests/unit/`          | Unit tests                                              |
+| `docs/`                | Architecture, security, UI, and quality overviews       |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Before you change anything
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Read [`AGENTS.md`](AGENTS.md) first. It owns the working rules: branch and
+release flow, the database migration workflow, the three-role model, secrets
+handling, and project conventions. This README deliberately does not repeat
+them.
+
+Deeper documentation:
+
+- [`docs/01-application-architecture-overview.md`](docs/01-application-architecture-overview.md)
+- [`docs/02-authentication-authorization-overview.md`](docs/02-authentication-authorization-overview.md)
+- [`docs/03-ui-design-system-overview.md`](docs/03-ui-design-system-overview.md)
+- [`docs/04-engineering-quality-overview.md`](docs/04-engineering-quality-overview.md)
+- [`docs/plans/`](docs/plans/) — implementation plans and their records
