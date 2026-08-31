@@ -38,3 +38,24 @@ export interface StatisticsData {
   trainings: TrainingStat[]
   registrations: RegistrationStat[]
 }
+
+export interface ActiveParticipant {
+  userId: string
+  name: string
+  phone: string
+  email: string
+  registeredAt: string
+}
+
+export interface CancelledParticipant {
+  userId: string
+  name: string
+  phone: string
+  email: string
+  cancelledAt: string
+}
+
+export interface TrainingParticipants {
+  active: ActiveParticipant[]
+  cancelled: CancelledParticipant[]
+}

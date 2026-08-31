@@ -73,7 +73,7 @@ after its own tests and acceptance criteria pass.
 
 | Block | Scope                                                           | Required verification                                           | Dependency       |
 | ----- | --------------------------------------------------------------- | --------------------------------------------------------------- | ---------------- |
-| `B1`  | Test foundation and pure authorization/authentication contracts | Unit tests only; no runtime permission change                   | None             |
+| `B1`  | Test foundation and pure authorization/authentication contracts | Unit tests only; no runtime permission change                   | None (done)             |
 | `B2`  | Three-role data model and registration invariant                | Migration, provisioning, and role-boundary integration tests    | B1               |
 | `B3`  | Auth DAL, request cache, and route protection                   | Unit plus focused request/component tests                       | B1, B2 contracts |
 | `B4`  | Supabase client boundaries and service-role removal             | Client-boundary and development integration tests               | B3               |
@@ -84,6 +84,9 @@ after its own tests and acceptance criteria pass.
 
 The first detailed block file is `002` and implements `B1`. Future block files
 receive the next available plan prefix while retaining their block identifier.
+
+`B1` is implemented and verified; the implementation record is in `002`.
+`B2` is the next block and has no detailed block file yet.
 
 ## B1 - Test foundation and pure authorization/authentication contracts
 

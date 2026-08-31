@@ -280,6 +280,18 @@ which evidence is required.
 | Database migration/RLS/grant   | Migration replay and real database tests as relevant roles                                                       |
 | Cross-layer user journey       | Focused E2E only when lower layers cannot prove the complete contract                                            |
 
+### Test commands
+
+| Command            | Scope                                                    |
+| ------------------ | -------------------------------------------------------- |
+| `npm test`         | Vitest, one run over `tests/unit/**/*.test.ts`           |
+| `npm run test:watch` | Same suite in watch mode during local development      |
+
+The runner is Vitest, configured in `vitest.config.mts`, which resolves the
+`@/*` alias the same way `tsconfig.json` does. The unit suite must stay free of
+Supabase, network access, filesystem state, wall-clock time, and real secrets;
+`environment: 'node'` is intentional until a block introduces component tests.
+
 Additional rules:
 
 - Test public behavior and contracts, not private implementation details.
@@ -393,7 +405,6 @@ have no approved implementation plan and must not be mixed into unrelated work.
 | ID        | Deferred finding and exit condition                                                                                                                                     | Status  | Tracking                                |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------- |
 | `ENG-001` | `npm run lint` uses removed `next lint`, while direct ESLint fails in the current compatibility configuration. Resolve when the supported direct ESLint command passes. | Open    | Requires a delivery/tooling plan        |
-| `ENG-002` | No application test command or established runner exists. Resolve when the approved test foundation is reproducible and its baseline suite passes.                      | Planned | Plan `001` B1; detail `002`             |
 | `ENG-003` | CI and `.env.example` are absent. Resolve when a clean checkout runs the approved quality gates using placeholders only.                                                | Open    | Requires a delivery/tooling plan        |
 | `ENG-004` | `app/error.tsx` renders raw `error.message`. Resolve when uncaught errors show safe generic Slovak copy and tests prove internal details stay hidden.                   | Open    | Requires an error-handling plan         |
 | `ENG-005` | Expected Server Action failures throw generic errors such as `Unauthorized` instead of returning typed results.                                                         | Planned | Plan `001` B6/B7                        |

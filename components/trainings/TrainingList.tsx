@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import { Pencil, Users } from 'lucide-react'
 
 import { TRAINING_TYPES } from '@/lib/constants'
@@ -26,6 +26,31 @@ interface TrainingListProps {
   userRegistrations?: number[]
   allowUnregister?: boolean
   registrationCounts?: Record<number, number>
+  onlyRegistered?: boolean
+}
+
+interface RegistrationChange {
+  trainingId: number
+  registered: boolean
+}
+
+interface RegistrationState {
+  registrations: number[]
+  counts: Record<number, number>
+}
+
+function applyRegistrationChange(state: RegistrationState, change: RegistrationChange): RegistrationState {
+  const delta = change.registered ? 1 : -1
+
+  return {
+    registrations: change.registered
+      ? [...state.registrations, change.trainingId]
+      : state.registrations.filter((id) => id !== change.trainingId),
+    counts: {
+      ...state.counts,
+      [change.trainingId]: Math.max(0, (state.counts[change.trainingId] || 0) + delta),
+    },
+  }
 }
 
 export default function TrainingList({
@@ -35,11 +60,14 @@ export default function TrainingList({
   userRegistrations = [],
   allowUnregister = true,
   registrationCounts = {},
+  onlyRegistered = false,
 }: TrainingListProps) {
   const isAdmin = role === 'admin'
   const { selectedDate } = useTraining()
-  const [registrations, setRegistrations] = useState<number[]>(userRegistrations)
-  const [loadingId, setLoadingId] = useState<number | null>(null)
+  const [optimistic, applyChange] = useOptimistic(
+    { registrations: userRegistrations, counts: registrationCounts },
+    applyRegistrationChange,
+  )
   const [, startTransition] = useTransition()
   const [confirmTraining, setConfirmTraining] = useState<Training | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -48,7 +76,7 @@ export default function TrainingList({
     return TRAINING_TYPES.find((t) => t.value === type)
   }
 
-  const filteredTrainings = (
+  const visibleTrainings = (
     showAll
       ? trainings
       : selectedDate
@@ -56,17 +84,18 @@ export default function TrainingList({
         : []
   ).sort((a, b) => a.datetime.localeCompare(b.datetime))
 
+  const filteredTrainings = onlyRegistered
+    ? visibleTrainings.filter((training) => optimistic.registrations.includes(training.id))
+    : visibleTrainings
+
   const handleRegister = (trainingId: number) => {
-    setLoadingId(trainingId)
     setErrorMsg(null)
     startTransition(async () => {
+      applyChange({ trainingId, registered: true })
       try {
         await registerForTrainingAction(trainingId)
-        setRegistrations((prev) => [...prev, trainingId])
       } catch (error) {
         setErrorMsg(error instanceof Error ? error.message : 'Nepodarilo sa prihlásiť')
-      } finally {
-        setLoadingId(null)
       }
     })
   }
@@ -74,17 +103,14 @@ export default function TrainingList({
   const handleUnregister = () => {
     if (!confirmTraining) return
     const trainingId = confirmTraining.id
-    setLoadingId(trainingId)
     setErrorMsg(null)
+    setConfirmTraining(null)
     startTransition(async () => {
+      applyChange({ trainingId, registered: false })
       try {
         await unregisterFromTrainingAction(trainingId)
-        setRegistrations((prev) => prev.filter((id) => id !== trainingId))
       } catch (error) {
         setErrorMsg(error instanceof Error ? error.message : 'Nepodarilo sa odhlásiť')
-      } finally {
-        setLoadingId(null)
-        setConfirmTraining(null)
       }
     })
   }
@@ -106,14 +132,11 @@ export default function TrainingList({
       ) : (
         <ul className="text-primary-50 flex h-full flex-col items-center justify-between space-y-3">
           {filteredTrainings.map((training) => {
-            const isRegistered = registrations.includes(training.id)
+            const isRegistered = optimistic.registrations.includes(training.id)
+            const registeredCount = optimistic.counts[training.id] || 0
             const deadlinePassed = isDeadlinePassed(training.unregisterDeadline)
-            const isFull = !!(
-              training.maxParticipants && (registrationCounts[training.id] || 0) >= training.maxParticipants
-            )
-            const remaining = training.maxParticipants
-              ? training.maxParticipants - (registrationCounts[training.id] || 0)
-              : null
+            const isFull = !!(training.maxParticipants && registeredCount >= training.maxParticipants)
+            const remaining = training.maxParticipants ? training.maxParticipants - registeredCount : null
             return (
               <li key={training.id} className="bg-primary-900/50 w-full space-y-2 rounded-lg p-3">
                 <div className="flex w-full items-center justify-between">
@@ -133,7 +156,7 @@ export default function TrainingList({
                       {isAdmin && showAll && (
                         <p className="text-primary-500 flex items-center gap-1 text-xs">
                           <Users className="h-3 w-3" />
-                          {registrationCounts[training.id] || 0}
+                          {registeredCount}
                           {training.maxParticipants ? ` / ${training.maxParticipants}` : ''}
                         </p>
                       )}
@@ -172,7 +195,6 @@ export default function TrainingList({
                       variant={isRegistered ? 'ghost' : 'secondary'}
                       size="sm"
                       className="rounded-2xl"
-                      loading={loadingId === training.id}
                       onClick={() => (isRegistered ? setConfirmTraining(training) : handleRegister(training.id))}
                     >
                       {isRegistered ? 'Odhlásiť sa' : 'Prihlásiť sa'}
@@ -204,7 +226,6 @@ export default function TrainingList({
         confirmLabel="Odhlásiť sa"
         cancelLabel="Zrušiť"
         confirmVariant="primary"
-        loading={loadingId === confirmTraining?.id}
         onConfirm={handleUnregister}
         onCancel={() => setConfirmTraining(null)}
       />

@@ -1,23 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Phone } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { Phone, UserMinus } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import type { ActiveParticipant, TrainingParticipants } from '@/lib/types'
 import TrainingForm from '@/app/(protected)/trainings/_components/TrainingForm'
-
-interface ActiveParticipant {
-  name: string
-  phone: string
-  email: string
-  registeredAt: string
-}
-
-interface CancelledParticipant {
-  name: string
-  phone: string
-  email: string
-  cancelledAt: string
-}
+import ConfirmSheet from '@/components/ui/ConfirmSheet'
 
 interface TrainingEditTabsProps {
   training: {
@@ -30,14 +18,39 @@ interface TrainingEditTabsProps {
     unregisterDeadline?: string | null
   }
   action: (formData: FormData) => void
-  participants: {
-    active: ActiveParticipant[]
-    cancelled: CancelledParticipant[]
-  }
+  participants: TrainingParticipants
+  onRemoveParticipant?: (trainingId: number, userId: string) => Promise<void>
 }
 
-export default function TrainingEditTabs({ training, action, participants }: TrainingEditTabsProps) {
+export default function TrainingEditTabs({
+  training,
+  action,
+  participants,
+  onRemoveParticipant,
+}: TrainingEditTabsProps) {
   const [activeTab, setActiveTab] = useState<'info' | 'participants'>('info')
+  const [confirmParticipant, setConfirmParticipant] = useState<ActiveParticipant | null>(null)
+  const [removeError, setRemoveError] = useState<string | null>(null)
+  const [isRemoving, startRemoving] = useTransition()
+
+  const canRemove = !!onRemoveParticipant && !!training.id
+
+  function handleRemove() {
+    if (!onRemoveParticipant || !training.id || !confirmParticipant) return
+
+    const trainingId = training.id
+    const { userId } = confirmParticipant
+
+    startRemoving(async () => {
+      try {
+        await onRemoveParticipant(trainingId, userId)
+        setConfirmParticipant(null)
+        setRemoveError(null)
+      } catch {
+        setRemoveError('Účastníka sa nepodarilo odhlásiť. Skús to znova.')
+      }
+    })
+  }
 
   return (
     <div>
@@ -46,7 +59,9 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
           type="button"
           onClick={() => setActiveTab('info')}
           className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
-            activeTab === 'info' ? 'border-accent-500 border-b-2 text-primary-50' : 'text-primary-400 hover:text-primary-200'
+            activeTab === 'info'
+              ? 'border-accent-500 text-primary-50 border-b-2'
+              : 'text-primary-400 hover:text-primary-200'
           }`}
         >
           Informácie
@@ -56,7 +71,7 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
           onClick={() => setActiveTab('participants')}
           className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
             activeTab === 'participants'
-              ? 'border-accent-500 border-b-2 text-primary-50'
+              ? 'border-accent-500 text-primary-50 border-b-2'
               : 'text-primary-400 hover:text-primary-200'
           }`}
         >
@@ -68,6 +83,8 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
         <TrainingForm training={training} action={action} />
       ) : (
         <div className="mx-auto max-w-6xl space-y-6 p-4">
+          {removeError && <p className="text-sm text-red-400">{removeError}</p>}
+
           {participants.active.length === 0 && participants.cancelled.length === 0 ? (
             <p className="text-primary-400 py-8 text-center">Zatiaľ nikto prihlásený</p>
           ) : (
@@ -75,9 +92,9 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
               {participants.active.length > 0 && (
                 <ul className="space-y-2">
                   {participants.active.map((p, i) => (
-                    <li key={i} className="bg-primary-900/50 flex items-center justify-between rounded-lg p-3">
+                    <li key={p.userId} className="bg-primary-900/50 flex items-center justify-between rounded-lg p-3">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-primary-50">{p.name}</p>
+                        <p className="text-primary-50 font-medium">{p.name}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                           <span className="text-primary-400 flex items-center gap-1 text-xs">
                             <Phone className="h-3 w-3" />
@@ -89,7 +106,23 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
                           </span>
                         </div>
                       </div>
-                      <span className="text-primary-500 ml-3 text-xs">#{i + 1}</span>
+                      <div className="ml-3 flex items-center gap-3">
+                        <span className="text-primary-500 text-xs">#{i + 1}</span>
+                        {canRemove && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRemoveError(null)
+                              setConfirmParticipant(p)
+                            }}
+                            disabled={isRemoving}
+                            aria-label={`Odhlásiť účastníka ${p.name}`}
+                            className="border-primary-700 bg-primary-800 text-primary-300 hover:bg-primary-700 cursor-pointer rounded-lg border p-2 shadow-sm transition-colors hover:border-red-400/40 hover:text-red-400 disabled:pointer-events-none disabled:opacity-50"
+                          >
+                            <UserMinus className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -101,13 +134,13 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
                     Odhlásení ({participants.cancelled.length})
                   </h3>
                   <ul className="space-y-2">
-                    {participants.cancelled.map((p, i) => (
+                    {participants.cancelled.map((p) => (
                       <li
-                        key={i}
+                        key={p.userId}
                         className="bg-primary-900/30 flex items-center justify-between rounded-lg p-3 opacity-60"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-primary-50 line-through">{p.name}</p>
+                          <p className="text-primary-50 font-medium line-through">{p.name}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                             <span className="text-primary-400 flex items-center gap-1 text-xs">
                               <Phone className="h-3 w-3" />
@@ -128,6 +161,22 @@ export default function TrainingEditTabs({ training, action, participants }: Tra
           )}
         </div>
       )}
+
+      <ConfirmSheet
+        open={!!confirmParticipant}
+        title="Odhlásiť účastníka?"
+        description={
+          confirmParticipant
+            ? `${confirmParticipant.name} bude odhlásený z tréningu a presunie sa do zoznamu odhlásených.`
+            : ''
+        }
+        confirmLabel="Odhlásiť"
+        cancelLabel="Zrušiť"
+        confirmVariant="primary"
+        loading={isRemoving}
+        onConfirm={handleRemove}
+        onCancel={() => setConfirmParticipant(null)}
+      />
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingRegistrationEmail } from '@/lib/email'
 import { formatDate } from '@/lib/utils'
 import { getTraining } from '@/services/queries/trainings'
-import { registerForTraining, unregisterFromTraining } from '@/services/queries/registrations'
+import { registerForTraining, removeParticipantByAdmin, unregisterFromTraining } from '@/services/queries/registrations'
 
 export async function registerForTrainingAction(trainingId: number) {
   const session = await auth()
@@ -50,6 +50,21 @@ export async function unregisterFromTrainingAction(trainingId: number) {
 
   await unregisterFromTraining(trainingId, session.user.id)
 
+  revalidatePath('/calendar')
+  revalidatePath('/trainings')
+}
+
+export async function removeParticipantAction(trainingId: number, userId: string) {
+  const session = await auth()
+
+  if (session?.user?.role !== 'admin') throw new Error('Unauthorized')
+  if (!Number.isInteger(trainingId)) throw new Error('Neplatné ID tréningu')
+  if (!userId) throw new Error('Neplatné ID účastníka')
+
+  // Admin odhlasuje aj po uplynutí deadlinu; ten viaže len samotného účastníka.
+  await removeParticipantByAdmin(trainingId, userId)
+
+  revalidatePath(`/trainings/${trainingId}/edit`)
   revalidatePath('/calendar')
   revalidatePath('/trainings')
 }

@@ -149,6 +149,43 @@ The block is complete only when all of the following are true:
 - the resulting changes are independently revertible without a database
   rollback.
 
+## Implementation record
+
+Implemented on 2026-08-18. The block is complete against the acceptance
+criteria above.
+
+Delivered:
+
+- `vitest` as the approved unit-test dependency, configured in
+  `vitest.config.mts` with the `@/*` alias and `environment: 'node'`;
+- `npm test` and `npm run test:watch` scripts;
+- `lib/auth/roles.ts` — `Role`, `parseRole`, `isRole`, the explicit capability
+  matrix, `can()`, `hasAdminCapabilities()`, `hasOwnerCapabilities()`;
+- `lib/auth/auth-result.ts` — the `AuthResult` discriminated union,
+  `toAuthResult()`, and the fail-closed `authorize()` decision;
+- `tests/unit/fixtures/identities.ts` — anonymous, user, admin, owner, and
+  broken-role fixtures returned as fresh objects;
+- `tests/unit/auth/` — 100 table-driven tests across roles, capabilities, and
+  auth results.
+
+Verification performed:
+
+| Check                                       | Result                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------- |
+| `npm test`                                  | 3 files, 100 tests passed                                           |
+| Mutation check (`parseRole` returns `user`) | 20 tests failed, proving the fail-closed contract is really covered |
+| `npx tsc --noEmit`                          | Passed                                                              |
+| `npx prettier --check`                      | Passed for all new files                                            |
+| `npm run build`                             | Passed, route table unchanged                                       |
+| ESLint                                      | Not run: pre-existing `ENG-001` breakage, unrelated to this block   |
+
+Not changed by this block: `lib/auth/dal.ts`, route protection, Supabase
+clients, RLS, grants, migrations, and role assignment. The new contracts are
+not yet consumed by runtime code; wiring them into the DAL belongs to `B3`.
+
+`ENG-002` and `AUTH-001` were removed from their deferred-work registers in
+the same change.
+
 ## Deployment and rollback
 
 This is a test-foundation release. It may be merged and deployed with no
