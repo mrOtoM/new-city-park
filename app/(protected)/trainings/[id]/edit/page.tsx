@@ -1,5 +1,6 @@
 import TrainingEditTabs from '@/app/(protected)/trainings/[id]/edit/_components/TrainingEditTabs'
 import { updateTrainingAction } from '@/services/actions/trainings'
+import { removeParticipantAction } from '@/services/actions/registrations'
 import { getTraining } from '@/services/queries/trainings'
 import { getTrainingParticipants } from '@/services/queries/registrations'
 import { auth } from '@/lib/auth/dal'
@@ -16,5 +17,12 @@ export default async function EditTrainingPage({ params }: { params: Promise<{ i
     notFound()
   }
 
-  return <TrainingEditTabs training={training} action={updateTrainingAction} participants={participants} />
+  return (
+    <TrainingEditTabs
+      training={training}
+      action={updateTrainingAction}
+      participants={participants}
+      onRemoveParticipant={removeParticipantAction}
+    />
+  )
 }

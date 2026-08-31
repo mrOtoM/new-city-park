@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import type { UserJoin } from '@/lib/types'
+import type { TrainingParticipants, UserJoin } from '@/lib/types'
 
 function parseUserJoin(users: unknown): UserJoin | null {
   if (users && typeof users === 'object' && 'fullName' in users) {
@@ -78,7 +78,31 @@ export async function unregisterFromTraining(trainingId: number, userId: string)
   }
 }
 
-export async function getTrainingParticipants(trainingId: number) {
+/**
+ * Odhlásenie účastníka administrátorom. Beží cez service-role klienta, preto ho
+ * volajúci smie použiť až po overení admin roly. Registrácia sa ruší mäkko,
+ * rovnako ako pri vlastnom odhlásení účastníka.
+ */
+export async function removeParticipantByAdmin(trainingId: number, userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from('training_registrations')
+    .update({ cancelled_at: new Date().toISOString() })
+    .eq('training_id', trainingId)
+    .eq('user_id', userId)
+    .is('cancelled_at', null)
+    .select('id')
+
+  if (error) {
+    console.error(error)
+    throw new Error('Nepodarilo sa odhlásiť účastníka')
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error('Účastník už nie je prihlásený na tento tréning')
+  }
+}
+
+export async function getTrainingParticipants(trainingId: number): Promise<TrainingParticipants> {
   const { data, error } = await supabaseAdmin
     .from('training_registrations')
     .select('registered_at, cancelled_at, user_id, users:user_id("fullName", "phoneNumber", email)')
@@ -95,6 +119,7 @@ export async function getTrainingParticipants(trainingId: number) {
     .map((r) => {
       const user = parseUserJoin(r.users)
       return {
+        userId: r.user_id,
         name: user?.fullName || 'Neznámy',
         phone: user?.phoneNumber || '–',
         email: user?.email || '–',
@@ -107,6 +132,7 @@ export async function getTrainingParticipants(trainingId: number) {
     .map((r) => {
       const user = parseUserJoin(r.users)
       return {
+        userId: r.user_id,
         name: user?.fullName || 'Neznámy',
         phone: user?.phoneNumber || '–',
         email: user?.email || '–',
