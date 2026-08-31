@@ -1,6 +1,6 @@
 -- ============================================
--- SUPABASE MIGRATION - 001_initial_setup
--- Skopíruj celý obsah do SQL Editora a spusti
+-- SUPABASE MIGRATION - initial_setup
+-- Aplikované ručne cez SQL Editor pred zavedením Supabase CLI.
 -- Bezpečné spúšťať opakovane (IF NOT EXISTS / DROP IF EXISTS)
 -- ============================================
 

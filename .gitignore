@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase cli
+supabase/.temp
+
+# lokalne zalohy dat (obsahuju PII, nikdy necommitovat)
+/backups
