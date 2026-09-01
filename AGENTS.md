@@ -235,6 +235,17 @@ see.
 
 ## Verification
 
+`npm test` runs the unit suite: pure contracts and mocked clients, no network.
+
+`npm run test:db` runs the integration suite in `tests/integration/` against the
+development Supabase project. It creates and deletes real accounts, so it
+refuses to start unless the active `NEXT_PUBLIC_SUPABASE_URL` matches the
+project ref the Supabase CLI is linked to. Never point it at production.
+
+A gap that a later block must close is marked with `it.fails`. Such a test is
+green while the gap exists and turns red once the gap is closed, which is the
+signal to convert it into an ordinary assertion.
+
 Before handing off a change, report what was checked, what was not checked,
 and any remaining uncertainty. For environment or deployment work, verify the
 branch, target environment, and relevant URL without exposing secret values.
