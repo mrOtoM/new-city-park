@@ -79,7 +79,11 @@ related plan and do not assume the migration is complete.
   its secret and never falls back to anon.
 - `public.training_capacity` is the single source of truth for training
   occupancy. It bypasses RLS by design, so no column carrying personal data may
-  ever be added to it.
+  ever be added to it. Supabase labels it `UNRESTRICTED` in the Table Editor;
+  that is expected. Do not "fix" it by switching the view to
+  `security_invoker = on` — RLS would then hide other users' registrations and
+  every count would silently drop to the viewer's own. Access is limited by the
+  grant instead: `authenticated` may select, `anon` may not.
 - Plan `001` block `B5` (RLS, grants, column protection) is implemented; the
   record is in `docs/plans/010-authorization-authentication-implementation-b5-plan.md`.
   Database policies call `public.has_admin_capabilities()`; extend that function
