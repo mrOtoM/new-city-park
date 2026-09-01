@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { auth } from '@/lib/auth/dal'
+import { requireUser } from '@/lib/auth/dal'
 import { updateUserPhone } from '@/services/queries/users'
 
 export async function signOutAction() {
@@ -16,11 +16,9 @@ export async function signOutAction() {
 }
 
 export async function updatePhoneAction(phone: string) {
-  const session = await auth()
+  const user = await requireUser()
 
-  if (!session?.user?.id) throw new Error('Unauthorized')
-
-  await updateUserPhone(session.user.id, phone)
+  await updateUserPhone(user.id, phone)
 
   revalidatePath('/profile')
 }

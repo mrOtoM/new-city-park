@@ -3,9 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { supabaseAdmin } from '@/lib/supabase'
-import { auth } from '@/lib/auth/dal'
-import { hasAdminCapabilities } from '@/lib/auth/roles'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingCancelledEmails } from '@/lib/email'
 import { buildDeadlineISO, computeDeadlineFromTraining, formatDate } from '@/lib/utils'
@@ -33,11 +32,10 @@ function extractTrainingData(formData: FormData) {
 }
 
 export async function createTrainingAction(formData: FormData) {
-  const session = await auth()
-
-  if (!hasAdminCapabilities(session?.user?.role)) throw new Error('Unauthorized')
+  await requireAdmin()
 
   const newTraining = extractTrainingData(formData)
+  const supabaseAdmin = createSupabaseAdminClient()
 
   const { error } = await supabaseAdmin.from('trainings').insert([newTraining])
 
@@ -51,15 +49,14 @@ export async function createTrainingAction(formData: FormData) {
 }
 
 export async function updateTrainingAction(formData: FormData) {
-  const session = await auth()
-
-  if (!hasAdminCapabilities(session?.user?.role)) throw new Error('Unauthorized')
+  await requireAdmin()
 
   const id = Number(formData.get('id'))
 
   if (isNaN(id)) throw new Error('Neplatné ID tréningu')
 
   const updates = extractTrainingData(formData)
+  const supabaseAdmin = createSupabaseAdminClient()
 
   const { error } = await supabaseAdmin.from('trainings').update(updates).eq('id', id)
 
@@ -73,11 +70,10 @@ export async function updateTrainingAction(formData: FormData) {
 }
 
 export async function deleteTrainingAction(trainingId: number) {
-  const session = await auth()
-
-  if (!hasAdminCapabilities(session?.user?.role)) throw new Error('Unauthorized')
+  await requireAdmin()
 
   const [training, participants] = await Promise.all([getTraining(trainingId), getTrainingParticipants(trainingId)])
+  const supabaseAdmin = createSupabaseAdminClient()
 
   const { error } = await supabaseAdmin.from('trainings').delete().eq('id', trainingId)
 

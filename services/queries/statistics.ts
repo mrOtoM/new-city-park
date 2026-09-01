@@ -1,4 +1,5 @@
-import { supabaseAdmin } from '@/lib/supabase'
+import { requireCapability } from '@/lib/auth/dal'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import type { RegistrationStat, StatisticsData, Summary, TrainingStat, TypeStat } from '@/lib/types'
 
 function parseUserName(users: unknown) {
@@ -8,7 +9,12 @@ function parseUserName(users: unknown) {
   return 'Neznámy'
 }
 
+/** Reads every user's registrations and names, so it verifies the capability itself. Privileged until B5. */
 export async function getStatisticsData(): Promise<StatisticsData> {
+  await requireCapability('statistics:view')
+
+  const supabaseAdmin = createSupabaseAdminClient()
+
   const [trainingsResult, registrationsResult] = await Promise.all([
     supabaseAdmin
       .from('trainings')

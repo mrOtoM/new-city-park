@@ -2,8 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { auth } from '@/lib/auth/dal'
-import { hasAdminCapabilities } from '@/lib/auth/roles'
+import { requireAdmin, requireUser } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingRegistrationEmail } from '@/lib/email'
 import { formatDate } from '@/lib/utils'
@@ -11,15 +10,13 @@ import { getTraining } from '@/services/queries/trainings'
 import { registerForTraining, removeParticipantByAdmin, unregisterFromTraining } from '@/services/queries/registrations'
 
 export async function registerForTrainingAction(trainingId: number) {
-  const session = await auth()
+  const user = await requireUser()
 
-  if (!session?.user?.id) throw new Error('Unauthorized')
-
-  await registerForTraining(trainingId, session.user.id)
+  await registerForTraining(trainingId, user.id)
 
   const training = await getTraining(trainingId)
 
-  if (training && session.user.email) {
+  if (training && user.email) {
     const typeLabel = TRAINING_TYPES.find((t) => t.value === training.type)?.label || 'Tréning'
     const datetimeStr = formatDate(training.datetime, 'd. MMMM yyyy, HH:mm')
     const deadlineStr = training.unregisterDeadline
@@ -27,7 +24,7 @@ export async function registerForTrainingAction(trainingId: number) {
       : null
 
     sendTrainingRegistrationEmail(
-      { name: session.user.name || 'športovec', email: session.user.email },
+      { name: user.name || 'športovec', email: user.email },
       typeLabel,
       datetimeStr,
       deadlineStr,
@@ -39,9 +36,7 @@ export async function registerForTrainingAction(trainingId: number) {
 }
 
 export async function unregisterFromTrainingAction(trainingId: number) {
-  const session = await auth()
-
-  if (!session?.user?.id) throw new Error('Unauthorized')
+  const user = await requireUser()
 
   const training = await getTraining(trainingId)
 
@@ -49,20 +44,19 @@ export async function unregisterFromTrainingAction(trainingId: number) {
     throw new Error('Odhlásenie už nie je možné – deadline prešiel')
   }
 
-  await unregisterFromTraining(trainingId, session.user.id)
+  await unregisterFromTraining(trainingId, user.id)
 
   revalidatePath('/calendar')
   revalidatePath('/trainings')
 }
 
 export async function removeParticipantAction(trainingId: number, userId: string) {
-  const session = await auth()
+  await requireAdmin()
 
-  if (!hasAdminCapabilities(session?.user?.role)) throw new Error('Unauthorized')
   if (!Number.isInteger(trainingId)) throw new Error('Neplatné ID tréningu')
   if (!userId) throw new Error('Neplatné ID účastníka')
 
-  // Admin odhlasuje aj po uplynutí deadlinu; ten viaže len samotného účastníka.
+  // The unregister deadline binds the participant only, not an admin.
   await removeParticipantByAdmin(trainingId, userId)
 
   revalidatePath(`/trainings/${trainingId}/edit`)

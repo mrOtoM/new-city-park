@@ -55,14 +55,40 @@ related plan and do not assume the migration is complete.
   `docs/plans/007-authorization-authentication-implementation-b2-plan.md`.
   `public.users.role` is constrained to `user`, `admin`, and `owner`, and the
   last owner cannot be demoted or deleted.
-- Server-side admin checks use `hasAdminCapabilities()` from
-  `lib/auth/roles.ts`, so `admin` and `owner` currently have identical
-  application rights. Add an owner-only capability in `roles.ts` and check it
-  with `can()` at the specific call site; do not reintroduce
-  `role === 'admin'` comparisons.
-- `lib/auth/dal.ts` still resolves roles itself and is not fail-closed; that is
-  `B3`, which is next. Database admin RLS policies still match `'admin'` only,
-  which `B5` must fix before `B4` moves user data off the service-role client.
+- Plan `001` block `B3` (auth DAL, request cache, route protection) is
+  implemented; the record is in
+  `docs/plans/008-authorization-authentication-implementation-b3-plan.md`.
+  `lib/auth/dal.ts` is the only server entry point for auth state: `auth()` is
+  request-cached and fail-closed, and `requireUser()`, `requireCapability()`,
+  `requireAdmin()`, `requireOwner()`, and `authorizeRequest()` are the guards.
+  Every page, Server Action, and Route Handler calls a guard itself; `proxy.ts`
+  and route groups are routing conveniences, not the security boundary.
+- Statistics are owner-only: `statistics:view` belongs to `owner`, not `admin`.
+  An admin manages trainings and sees participants; only an owner sees the
+  numbers. Check it with `requireCapability('statistics:view')`.
+- Authorization is decided by capability, never by comparing the role string.
+  Add an owner-only capability in `lib/auth/roles.ts` and check it with `can()`
+  at the specific call site; do not reintroduce `role === 'admin'`.
+- Redirect targets pass through `safeNextPath()` in `lib/auth/redirects.ts`.
+- Plan `001` block `B4` (Supabase client boundaries) is implemented; the record
+  is in `docs/plans/009-authorization-authentication-implementation-b4-plan.md`.
+  `lib/supabase.ts` is gone. Use `lib/supabase/browser.ts` in Client Components,
+  `lib/supabase/server.ts` for anything a signed-in user does, and
+  `createSupabaseAdminClient()` from `lib/supabase/admin.ts` only after a
+  capability check in the same function. The privileged client throws without
+  its secret and never falls back to anon.
+- `public.training_capacity` is the single source of truth for training
+  occupancy. It bypasses RLS by design, so no column carrying personal data may
+  ever be added to it.
+- Plan `001` block `B5` (RLS, grants, column protection) is implemented; the
+  record is in `docs/plans/010-authorization-authentication-implementation-b5-plan.md`.
+  Database policies call `public.has_admin_capabilities()`; extend that function
+  rather than inlining another role subquery. `public.users` no longer carries
+  broad grants: `authenticated` has `SELECT` and `UPDATE ("phoneNumber")` only,
+  and `anon` has nothing.
+- Participant and statistics reads still use the service-role client even though
+  the policies now allow the cookie-bound one. Moving them is a follow-up.
+- `B6` is next.
 
 ## Deferred work registers
 
@@ -170,6 +196,41 @@ Verify the linked project before every `db push`. The CLI applies to whichever
 project is linked, and linking is machine-local state the repository cannot
 see.
 
+#### Production is applied by hand, not by the CLI
+
+The CLI cannot reach the production project `uklqoodkivkwswnyksza`
+(`new-city-park-production`, created 2025-08-29, Postgres 17.4.1.074). `link`
+succeeds, but every command that opens a database connection fails while
+creating the login role, including read-only ones such as `migration list` and
+`db dump`:
+
+```text
+LegacyDbConfigLoginRoleStatusError: unexpected login role status 400:
+Failed to create login role: ERROR: 42501: permission denied to alter role
+DETAIL: Only roles with the CREATEROLE attribute and the ADMIN option on role
+"cli_login_postgres" may alter this role.
+```
+
+The development project `bqefyxloqktstljbzbgu` (created 2026-08-10, Postgres
+17.6.1.155) works with the same CLI version and the same login session, so this
+is the older project's role configuration, not a local problem. The role does
+not exist there, so it is not a leftover from a failed attempt. Fixing it needs
+`supabase_admin`, which the project owner does not have; a support request is
+open. Tracked as `ENG-010`.
+
+Consequences, which every production change must respect:
+
+- Production migrations are applied by pasting the migration file into the SQL
+  Editor of the production project, in file order.
+- Production has **no** `supabase_migrations.schema_migrations` history, so
+  `migration list` cannot tell you what is applied there. Verify by querying
+  for the objects a migration creates before and after running it.
+- Never assume production and development are in sync. Verified in production
+  on 2026-09-01: `20260214140608_initial_setup` and `20260831110000_three_role_model`
+  are applied; `20260901073108_training_capacity_view` and
+  `20260901080714_rls_admin_owner_and_grants` are not.
+- This is why every migration must be safe to re-run.
+
 ### Migration style
 
 - Write migration comments in English, unlike user-facing copy, which stays
@@ -187,6 +248,24 @@ see.
 ## Project conventions
 
 - User-facing text and error messages are in Slovak.
+- Code comments are in English everywhere, including TypeScript, TSX, SQL, and
+  configuration files. Slovak stays in user-facing copy only.
+- Comment only what the code cannot say: a non-obvious reason, an invariant, a
+  workaround, or a cross-file dependency. Do not restate what the next line
+  already shows, and do not add section banners to source files.
+- Existing Slovak comments are rewritten when the surrounding code is touched;
+  do not open a separate translation pass unless asked.
+- A type or interface used by more than one module belongs in `lib/types.ts`,
+  imported with `import type`. Do not redeclare the same shape in two files.
+- Runtime modules do not declare their own types. `lib/auth/dal.ts` imports
+  `Session`, `SessionUser`, `RequestAuthorization`, `UserProfileRow`, and
+  `AuthUserMetadata` from `lib/types.ts`.
+- The exception is a definition module, where the type is the deliverable:
+  `lib/auth/roles.ts` owns `Role` and `Capability`, `lib/auth/auth-result.ts`
+  owns `AuthResult`.
+- Component prop interfaces stay in the component file; they are part of its
+  signature, not shared vocabulary. Promote one to `lib/types.ts` as soon as a
+  second file needs it.
 - Reads belong in `services/queries/`.
 - Writes belong in `services/actions/`.
 - Keep service-role access on the server and after the appropriate role check.
@@ -199,6 +278,17 @@ see.
   No `bg-blue-500`, no `text-gray-200`.
 
 ## Verification
+
+`npm test` runs the unit suite: pure contracts and mocked clients, no network.
+
+`npm run test:db` runs the integration suite in `tests/integration/` against the
+development Supabase project. It creates and deletes real accounts, so it
+refuses to start unless the active `NEXT_PUBLIC_SUPABASE_URL` matches the
+project ref the Supabase CLI is linked to. Never point it at production.
+
+A gap that a later block must close is marked with `it.fails`. Such a test is
+green while the gap exists and turns red once the gap is closed, which is the
+signal to convert it into an ordinary assertion.
 
 Before handing off a change, report what was checked, what was not checked,
 and any remaining uncertainty. For environment or deployment work, verify the

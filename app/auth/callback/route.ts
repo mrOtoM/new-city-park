@@ -1,3 +1,4 @@
+import { safeNextPath } from '@/lib/auth/redirects'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
@@ -15,5 +16,5 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/reset-password`)
   }
 
-  return NextResponse.redirect(`${origin}/calendar`)
+  return NextResponse.redirect(new URL(safeNextPath(searchParams.get('next')), origin))
 }

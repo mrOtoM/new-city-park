@@ -54,8 +54,8 @@ explicit:
 | Role    | Capability boundary                                                                                           |
 | ------- | ------------------------------------------------------------------------------------------------------------- |
 | `user`  | Own profile, own registrations, and authenticated training/calendar access                                    |
-| `admin` | User capabilities plus training management, participant data, and statistics; no role assignment              |
-| `owner` | Admin capabilities plus explicitly approved owner-only security or break-glass operations; no role assignment |
+| `admin` | User capabilities plus training management and participant data; no statistics, no role assignment           |
+| `owner` | Admin capabilities plus statistics and approved owner-only security operations; no role assignment            |
 
 `owner` is a value in `public.users`, not a PostgreSQL superuser and not an
 alias for the service-role key.
@@ -75,9 +75,9 @@ after its own tests and acceptance criteria pass.
 | ----- | --------------------------------------------------------------- | --------------------------------------------------------------- | ---------------- |
 | `B1`  | Test foundation and pure authorization/authentication contracts | Unit tests only; no runtime permission change                   | None (done)             |
 | `B2`  | Three-role data model and registration invariant                | Migration, provisioning, and role-boundary integration tests    | B1               |
-| `B3`  | Auth DAL, request cache, and route protection                   | Unit plus focused request/component tests                       | B1, B2 contracts |
-| `B4`  | Supabase client boundaries and service-role removal             | Client-boundary and development integration tests               | B3               |
-| `B5`  | RLS, grants, column protection, and ownership enforcement       | Real development RLS/Data API/grant tests                       | B4               |
+| `B3`  | Auth DAL, request cache, and route protection                   | Unit plus focused request/component tests (done)                | B1, B2 contracts |
+| `B4`  | Supabase client boundaries and service-role removal             | Client-boundary and development integration tests (done)        | B3               |
+| `B5`  | RLS, grants, column protection, and ownership enforcement       | Real development RLS/Data API/grant tests (done)                | B4               |
 | `B6`  | Calendar API, Server Actions, and atomic registration           | API/action integration and selected E2E tests                   | B5               |
 | `B7`  | Login, signup, reset, redirect, and rate-limit hardening        | Auth-flow integration and selected E2E/security tests           | B3, B6           |
 | `B8`  | Key migration, final audit, regression, and release             | Full regression, E2E, security smoke, build, and release checks | B1-B7            |
@@ -88,7 +88,14 @@ receive the next available plan prefix while retaining their block identifier.
 `B1` is implemented and verified; the implementation record is in `002`.
 `B2` is implemented and verified on the development database; the
 implementation record is in
-`007-authorization-authentication-implementation-b2-plan.md`. `B3` is the next
+`007-authorization-authentication-implementation-b2-plan.md`. `B3` is
+implemented and verified by unit tests and the production build; the
+implementation record is in
+`008-authorization-authentication-implementation-b3-plan.md`. `B4` is implemented; the
+implementation record is in
+`009-authorization-authentication-implementation-b4-plan.md`. `B5` is implemented; the
+implementation record is in
+`010-authorization-authentication-implementation-b5-plan.md`. `B6` is the next
 block and has no detailed block file yet.
 
 ## B1 - Test foundation and pure authorization/authentication contracts

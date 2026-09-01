@@ -57,7 +57,7 @@ export async function sendTrainingRegistrationEmail(
       `
             <p>Ahoj ${safeName},</p>
             <p>
-              úspešne sme ťa prihlásili na tréning <strong>${safeLabel}</strong>,
+              Úspešne sme ťa prihlásili na tréning <strong>${safeLabel}</strong>,
               ktorý sa koná <strong>${safeDatetime}</strong>.
             </p>
             ${deadlineParagraph}

@@ -2,7 +2,7 @@ import TrainingList from '@/components/trainings/TrainingList'
 import Button from '@/components/ui/Button'
 import { getTrainings } from '@/services/queries/trainings'
 import { getUserRegistrations, getRegistrationCounts } from '@/services/queries/registrations'
-import { auth } from '@/lib/auth/dal'
+import { requireUser } from '@/lib/auth/dal'
 import { hasAdminCapabilities } from '@/lib/auth/roles'
 import { Plus } from 'lucide-react'
 
@@ -13,9 +13,8 @@ export const metadata = {
 }
 
 export default async function TrainingsPage() {
-  const [trainings, session] = await Promise.all([getTrainings(), auth()])
-  const role = session?.user?.role ?? 'user'
-  const isAdmin = hasAdminCapabilities(role)
+  const [trainings, user] = await Promise.all([getTrainings(), requireUser()])
+  const isAdmin = hasAdminCapabilities(user.role)
 
   const now = new Date()
   const currentTrainings = trainings
@@ -23,7 +22,7 @@ export default async function TrainingsPage() {
     .sort((a, b) => a.datetime.localeCompare(b.datetime))
 
   const [userRegistrations, registrationCounts] = await Promise.all([
-    session?.user?.id ? getUserRegistrations(session.user.id) : Promise.resolve([]),
+    getUserRegistrations(user.id),
     getRegistrationCounts(),
   ])
 
@@ -41,7 +40,7 @@ export default async function TrainingsPage() {
       )}
       <TrainingList
         trainings={visibleTrainings}
-        role={role}
+        role={user.role}
         showAll
         onlyRegistered={!isAdmin}
         userRegistrations={userRegistrations}

@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { BarChart3, CalendarDays, User, ListCheck } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
+import { type Capability, type Role, can } from '@/lib/auth/roles'
+
 const navLinks = [
   {
     name: 'Kalendár',
@@ -19,7 +21,7 @@ const navLinks = [
     name: 'Štatistiky',
     href: '/statistics',
     icon: <BarChart3 className="h-7 w-7" />,
-    adminOnly: true,
+    capability: 'statistics:view' as Capability,
   },
   {
     name: 'Profil',
@@ -28,9 +30,10 @@ const navLinks = [
   },
 ]
 
-export default function Navigation({ role = 'user' }: { role?: string }) {
+export default function Navigation({ role = 'user' }: { role?: Role }) {
   const pathname = usePathname()
-  const visibleLinks = navLinks.filter((link) => !link.adminOnly || role === 'admin')
+  // Visibility only; the pages behind these links authorize themselves.
+  const visibleLinks = navLinks.filter((link) => !link.capability || can(role, link.capability))
 
   return (
     <nav className="mx-auto h-20 max-w-6xl">

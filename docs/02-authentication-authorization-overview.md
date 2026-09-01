@@ -52,8 +52,8 @@ comparisons throughout the application.
 | Role    | Approved capability boundary                                                                       |
 | ------- | -------------------------------------------------------------------------------------------------- |
 | `user`  | Own profile, own registrations, and authenticated training/calendar access                         |
-| `admin` | All user capabilities plus training management, participant data, and statistics                   |
-| `owner` | All admin capabilities plus only explicitly approved owner-only security or break-glass operations |
+| `admin` | All user capabilities plus training management and participant data; no statistics                 |
+| `owner` | All admin capabilities plus statistics and explicitly approved owner-only security operations      |
 
 No role has an application capability to assign roles.
 
@@ -310,9 +310,6 @@ determine implementation status.
 
 | ID         | Deferred finding and exit condition                                                                                                                                                                                 | Status  | Tracking                    |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------- |
-| `AUTH-003` | The auth helper is not request-cached and a missing/unknown profile role can fail open as `user`; protected entry points are not consistently DAL-guarded.                                                          | Planned | Plan `001` B3               |
-| `AUTH-004` | Regular-user and privileged paths use the mixed `lib/supabase.ts`; the privileged client can fall back to anon. Resolve when regular-user paths use cookie-bound RLS and privileged access is isolated/fail-closed. | Planned | Plan `001` B4               |
-| `AUTH-005` | RLS, grants, protected user columns, owner/admin policies, and `SECURITY DEFINER` boundaries require real database enforcement tests.                                                                               | Planned | Plan `001` B5               |
-| `AUTH-006` | `/api/calendar`, directly callable Server Actions, and registration capacity are not fully protected/atomic.                                                                                                        | Planned | Plan `001` B6               |
+| `AUTH-006` | `/api/calendar`, directly callable Server Actions, and registration capacity are not fully protected/atomic. `registerForTrainingAction` also accepts any training id, including one whose datetime has passed; only the UI filters those.                                                                                                        | Planned | Plan `001` B6               |
 | `AUTH-007` | Login/signup/reset flows lack the complete rate-limit, redirect, site-URL, account-enumeration, and safe-error contract.                                                                                            | Planned | Plan `001` B7               |
 | `AUTH-008` | Legacy key migration and the final full security/release audit remain outstanding.                                                                                                                                  | Planned | Plan `001` B8               |

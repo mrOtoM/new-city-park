@@ -2,7 +2,7 @@ import Calendar from '@/app/(protected)/calendar/_components/Calendar'
 import TrainingList from '@/components/trainings/TrainingList'
 import { getTrainings } from '@/services/queries/trainings'
 import { getUserRegistrations, getRegistrationCounts } from '@/services/queries/registrations'
-import { auth } from '@/lib/auth/dal'
+import { requireUser } from '@/lib/auth/dal'
 
 export const revalidate = 0
 
@@ -11,10 +11,9 @@ export const metadata = {
 }
 
 export default async function CalendarPage() {
-  const [trainings, session] = await Promise.all([getTrainings(), auth()])
-  const role = session?.user?.role ?? 'user'
+  const [trainings, user] = await Promise.all([getTrainings(), requireUser()])
   const [userRegistrations, registrationCounts] = await Promise.all([
-    session?.user?.id ? getUserRegistrations(session.user.id) : Promise.resolve([]),
+    getUserRegistrations(user.id),
     getRegistrationCounts(),
   ])
 
@@ -23,7 +22,7 @@ export default async function CalendarPage() {
       <Calendar trainings={trainings} />
       <TrainingList
         trainings={trainings}
-        role={role}
+        role={user.role}
         userRegistrations={userRegistrations}
         allowUnregister={false}
         registrationCounts={registrationCounts}

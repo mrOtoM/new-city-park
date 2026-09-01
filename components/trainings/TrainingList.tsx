@@ -3,6 +3,7 @@
 import { useOptimistic, useState, useTransition } from 'react'
 import { Pencil, Users } from 'lucide-react'
 
+import { type Role, hasAdminCapabilities } from '@/lib/auth/roles'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { formatDate, isDeadlinePassed } from '@/lib/utils'
 import { useTraining } from '@/components/providers/TrainingContext'
@@ -21,7 +22,7 @@ interface Training {
 
 interface TrainingListProps {
   trainings: Training[]
-  role?: string
+  role?: Role
   showAll?: boolean
   userRegistrations?: number[]
   allowUnregister?: boolean
@@ -62,7 +63,7 @@ export default function TrainingList({
   registrationCounts = {},
   onlyRegistered = false,
 }: TrainingListProps) {
-  const isAdmin = role === 'admin'
+  const isAdmin = hasAdminCapabilities(role)
   const { selectedDate } = useTraining()
   const [optimistic, applyChange] = useOptimistic(
     { registrations: userRegistrations, counts: registrationCounts },

@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
 
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function getTrainings() {
+  const supabase = await createSupabaseServerClient()
+
   const { data, error } = await supabase
     .from('trainings')
     .select('id, type, datetime, note, unregisterDeadline, maxParticipants')
@@ -16,6 +18,8 @@ export async function getTrainings() {
 }
 
 export async function getTraining(id: number) {
+  const supabase = await createSupabaseServerClient()
+
   const { data, error } = await supabase
     .from('trainings')
     .select('id, type, datetime, note, minParticipants, maxParticipants, unregisterDeadline')

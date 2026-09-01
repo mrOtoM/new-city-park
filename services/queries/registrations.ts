@@ -1,5 +1,6 @@
+import { requireCapability } from '@/lib/auth/dal'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase'
 import type { TrainingParticipants, UserJoin } from '@/lib/types'
 
 function parseUserJoin(users: unknown): UserJoin | null {
@@ -23,22 +24,14 @@ export async function registerForTraining(trainingId: number, userId: string) {
     throw new Error('Už si prihlásený na tento tréning')
   }
 
-  const { data: training } = await supabaseAdmin
-    .from('trainings')
-    .select('maxParticipants')
-    .eq('id', trainingId)
+  const { data: capacity } = await supabase
+    .from('training_capacity')
+    .select('max_participants, active_count')
+    .eq('training_id', trainingId)
     .single()
 
-  if (training?.maxParticipants) {
-    const { count } = await supabaseAdmin
-      .from('training_registrations')
-      .select('id', { count: 'exact', head: true })
-      .eq('training_id', trainingId)
-      .is('cancelled_at', null)
-
-    if ((count ?? 0) >= training.maxParticipants) {
-      throw new Error('Tréning je už plne obsadený')
-    }
+  if (capacity?.max_participants && capacity.active_count >= capacity.max_participants) {
+    throw new Error('Tréning je už plne obsadený')
   }
 
   if (existing && existing.cancelled_at) {
@@ -79,11 +72,15 @@ export async function unregisterFromTraining(trainingId: number, userId: string)
 }
 
 /**
- * Odhlásenie účastníka administrátorom. Beží cez service-role klienta, preto ho
- * volajúci smie použiť až po overení admin roly. Registrácia sa ruší mäkko,
- * rovnako ako pri vlastnom odhlásení účastníka.
+ * Soft-cancels someone else's registration, so it verifies the capability
+ * itself rather than trusting the calling page. Privileged until B5 adds an
+ * admin UPDATE policy on training_registrations.
  */
 export async function removeParticipantByAdmin(trainingId: number, userId: string) {
+  await requireCapability('training:manage')
+
+  const supabaseAdmin = createSupabaseAdminClient()
+
   const { data, error } = await supabaseAdmin
     .from('training_registrations')
     .update({ cancelled_at: new Date().toISOString() })
@@ -102,7 +99,12 @@ export async function removeParticipantByAdmin(trainingId: number, userId: strin
   }
 }
 
+/** Returns participant PII, so it verifies the capability itself. Privileged until B5. */
 export async function getTrainingParticipants(trainingId: number): Promise<TrainingParticipants> {
+  await requireCapability('participants:view')
+
+  const supabaseAdmin = createSupabaseAdminClient()
+
   const { data, error } = await supabaseAdmin
     .from('training_registrations')
     .select('registered_at, cancelled_at, user_id, users:user_id("fullName", "phoneNumber", email)')
@@ -144,15 +146,15 @@ export async function getTrainingParticipants(trainingId: number): Promise<Train
 }
 
 export async function getRegistrationCounts(): Promise<Record<number, number>> {
-  const { data, error } = await supabaseAdmin
-    .from('training_registrations')
-    .select('training_id')
-    .is('cancelled_at', null)
+  const supabase = await createSupabaseServerClient()
+
+  const { data, error } = await supabase.from('training_capacity').select('training_id, active_count')
 
   if (error) return {}
+
   const counts: Record<number, number> = {}
-  for (const r of data) {
-    counts[r.training_id] = (counts[r.training_id] || 0) + 1
+  for (const row of data) {
+    counts[row.training_id] = row.active_count
   }
   return counts
 }
