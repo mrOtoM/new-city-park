@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingCancelledEmails } from '@/lib/email'
@@ -35,6 +35,7 @@ export async function createTrainingAction(formData: FormData) {
   await requireAdmin()
 
   const newTraining = extractTrainingData(formData)
+  const supabaseAdmin = createSupabaseAdminClient()
 
   const { error } = await supabaseAdmin.from('trainings').insert([newTraining])
 
@@ -55,6 +56,7 @@ export async function updateTrainingAction(formData: FormData) {
   if (isNaN(id)) throw new Error('Neplatné ID tréningu')
 
   const updates = extractTrainingData(formData)
+  const supabaseAdmin = createSupabaseAdminClient()
 
   const { error } = await supabaseAdmin.from('trainings').update(updates).eq('id', id)
 
@@ -71,6 +73,7 @@ export async function deleteTrainingAction(trainingId: number) {
   await requireAdmin()
 
   const [training, participants] = await Promise.all([getTraining(trainingId), getTrainingParticipants(trainingId)])
+  const supabaseAdmin = createSupabaseAdminClient()
 
   const { error } = await supabaseAdmin.from('trainings').delete().eq('id', trainingId)
 

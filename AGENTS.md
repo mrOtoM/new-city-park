@@ -67,8 +67,19 @@ related plan and do not assume the migration is complete.
   Add an owner-only capability in `lib/auth/roles.ts` and check it with `can()`
   at the specific call site; do not reintroduce `role === 'admin'`.
 - Redirect targets pass through `safeNextPath()` in `lib/auth/redirects.ts`.
-- `B4` is next. Database admin RLS policies still match `'admin'` only, which
-  `B5` must fix before `B4` moves user data off the service-role client.
+- Plan `001` block `B4` (Supabase client boundaries) is implemented; the record
+  is in `docs/plans/009-authorization-authentication-implementation-b4-plan.md`.
+  `lib/supabase.ts` is gone. Use `lib/supabase/browser.ts` in Client Components,
+  `lib/supabase/server.ts` for anything a signed-in user does, and
+  `createSupabaseAdminClient()` from `lib/supabase/admin.ts` only after a
+  capability check in the same function. The privileged client throws without
+  its secret and never falls back to anon.
+- `public.training_capacity` is the single source of truth for training
+  occupancy. It bypasses RLS by design, so no column carrying personal data may
+  ever be added to it.
+- `B5` is next. Database admin policies still match `'admin'` only and there is
+  no policy letting an admin read another user's row, which is why participant,
+  statistics, and admin-write paths are still on the service role.
 
 ## Deferred work registers
 
