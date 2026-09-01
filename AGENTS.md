@@ -196,6 +196,40 @@ Verify the linked project before every `db push`. The CLI applies to whichever
 project is linked, and linking is machine-local state the repository cannot
 see.
 
+#### Production is applied by hand, not by the CLI
+
+The CLI cannot reach the production project `uklqoodkivkwswnyksza`
+(`new-city-park-production`, created 2025-08-29, Postgres 17.4.1.074). `link`
+succeeds, but every command that opens a database connection fails while
+creating the login role, including read-only ones such as `migration list` and
+`db dump`:
+
+```text
+LegacyDbConfigLoginRoleStatusError: unexpected login role status 400:
+Failed to create login role: ERROR: 42501: permission denied to alter role
+DETAIL: Only roles with the CREATEROLE attribute and the ADMIN option on role
+"cli_login_postgres" may alter this role.
+```
+
+The development project `bqefyxloqktstljbzbgu` (created 2026-08-10, Postgres
+17.6.1.155) works with the same CLI version and the same login session, so this
+is the older project's role configuration, not a local problem. The role does
+not exist there, so it is not a leftover from a failed attempt. Fixing it needs
+`supabase_admin`, which the project owner does not have; a support request is
+open. Tracked as `ENG-010`.
+
+Consequences, which every production change must respect:
+
+- Production migrations are applied by pasting the migration file into the SQL
+  Editor of the production project, in file order.
+- Production has **no** `supabase_migrations.schema_migrations` history, so
+  `migration list` cannot tell you what is applied there. Verify by querying
+  for the objects a migration creates before and after running it.
+- Never assume production and development are in sync. As of 2026-09-01
+  production is missing `20260901073108_training_capacity_view` and
+  `20260901080714_rls_admin_owner_and_grants`.
+- This is why every migration must be safe to re-run.
+
 ### Migration style
 
 - Write migration comments in English, unlike user-facing copy, which stays
