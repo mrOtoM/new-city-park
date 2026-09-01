@@ -225,9 +225,10 @@ Consequences, which every production change must respect:
 - Production has **no** `supabase_migrations.schema_migrations` history, so
   `migration list` cannot tell you what is applied there. Verify by querying
   for the objects a migration creates before and after running it.
-- Never assume production and development are in sync. As of 2026-09-01
-  production is missing `20260901073108_training_capacity_view` and
-  `20260901080714_rls_admin_owner_and_grants`.
+- Never assume production and development are in sync. Verified in production
+  on 2026-09-01: `20260214140608_initial_setup` and `20260831110000_three_role_model`
+  are applied; `20260901073108_training_capacity_view` and
+  `20260901080714_rls_admin_owner_and_grants` are not.
 - This is why every migration must be safe to re-run.
 
 ### Migration style
