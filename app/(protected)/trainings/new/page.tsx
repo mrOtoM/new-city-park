@@ -1,12 +1,9 @@
 import TrainingForm from '@/app/(protected)/trainings/_components/TrainingForm'
 import { createTrainingAction } from '@/services/actions/trainings'
-import { auth } from '@/lib/auth/dal'
-import { hasAdminCapabilities } from '@/lib/auth/roles'
-import { redirect } from 'next/navigation'
+import { requireAdmin } from '@/lib/auth/dal'
 
 export default async function NewTrainingPage() {
-  const session = await auth()
-  if (!hasAdminCapabilities(session?.user?.role)) redirect('/calendar')
+  await requireAdmin()
 
   return <TrainingForm action={createTrainingAction} />
 }

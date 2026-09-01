@@ -5,6 +5,7 @@ import bg6 from '@/public/bg6.png'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { safeNextPath } from '@/lib/auth/redirects'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -15,6 +16,8 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  const nextPath = () => safeNextPath(new URLSearchParams(window.location.search).get('next'))
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +36,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/calendar')
+    router.push(nextPath())
     router.refresh()
   }
 
@@ -44,7 +47,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(nextPath())}`,
       },
     })
 
@@ -58,14 +61,14 @@ export default function LoginPage() {
     'bg-primary-900 text-primary-50 placeholder:text-primary-400 focus:ring-primary-600 w-full rounded-lg border border-transparent px-4 py-3 focus:ring-2 focus:outline-none'
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-primary-900">
-      <div className="flex min-h-screen w-full flex-col overflow-hidden rounded-none bg-primary-950 sm:mx-auto sm:min-h-auto sm:max-w-sm sm:rounded-2xl sm:border sm:border-primary-800 sm:shadow-lg">
-        <div className="relative h-[34vh] flex-none bg-primary-800 sm:h-54">
+    <main className="bg-primary-900 flex min-h-screen items-center justify-center">
+      <div className="bg-primary-950 sm:border-primary-800 flex min-h-screen w-full flex-col overflow-hidden rounded-none sm:mx-auto sm:min-h-auto sm:max-w-sm sm:rounded-2xl sm:border sm:shadow-lg">
+        <div className="bg-primary-800 relative h-[34vh] flex-none sm:h-54">
           <Image src={bg6} quality={80} alt="hero" fill className="flex-1 object-cover" />
         </div>
 
         <div className="flex flex-1 flex-col overflow-auto p-6">
-          <h2 className="text-center text-xl font-semibold text-primary-200">New City Park</h2>
+          <h2 className="text-primary-200 text-center text-xl font-semibold">New City Park</h2>
           <form onSubmit={handleLogin} className="mt-6 space-y-4">
             {error && <p className="text-center text-sm text-red-400">{error}</p>}
             <div>
@@ -100,7 +103,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="flex justify-end">
-              <Link href="/forgot-password" className="text-sm text-primary-400 hover:underline">
+              <Link href="/forgot-password" className="text-primary-400 text-sm hover:underline">
                 Zabudli ste heslo?
               </Link>
             </div>
@@ -113,16 +116,16 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-5 flex items-center gap-3">
-            <div className="h-px flex-1 bg-primary-700" />
-            <span className="text-xs text-primary-400">alebo</span>
-            <div className="h-px flex-1 bg-primary-700" />
+            <div className="bg-primary-700 h-px flex-1" />
+            <span className="text-primary-400 text-xs">alebo</span>
+            <div className="bg-primary-700 h-px flex-1" />
           </div>
 
           <button
             type="button"
             onClick={handleGoogleLogin}
             disabled={googleLoading}
-            className="mt-4 mb-4 flex w-full items-center justify-center gap-3 rounded-lg border border-primary-700 bg-primary-900 px-4 py-3 text-sm font-medium text-primary-200 transition-colors hover:bg-primary-800 disabled:opacity-50"
+            className="border-primary-700 bg-primary-900 text-primary-200 hover:bg-primary-800 mt-4 mb-4 flex w-full items-center justify-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
@@ -144,9 +147,9 @@ export default function LoginPage() {
             </svg>
             {googleLoading ? 'Presmerovanie...' : 'Prihlásiť sa cez Google'}
           </button>
-          <div className="mt-auto text-center text-sm text-primary-400">
+          <div className="text-primary-400 mt-auto text-center text-sm">
             Nemáte účet?{' '}
-            <Link href="/register" className="font-medium text-primary-300 hover:underline">
+            <Link href="/register" className="text-primary-300 font-medium hover:underline">
               Zaregistrovať sa
             </Link>
           </div>

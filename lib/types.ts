@@ -1,3 +1,31 @@
+import type { AuthDenialReason } from '@/lib/auth/auth-result'
+import type { Role } from '@/lib/auth/roles'
+
+export interface SessionUser {
+  id: string
+  email: string | null
+  role: Role
+  name: string
+  phone: string
+}
+
+export type Session =
+  | { status: 'unauthenticated' }
+  | { status: 'denied'; reason: AuthDenialReason }
+  | { status: 'authenticated'; user: SessionUser }
+
+export type RequestAuthorization = { ok: true; user: SessionUser } | { ok: false; response: Response }
+
+export type AuthUserMetadata = { first_name?: unknown; last_name?: unknown } | undefined
+
+export interface UserProfileRow {
+  id: string
+  email: string | null
+  fullName: string | null
+  phoneNumber: string | null
+  role: unknown
+}
+
 export interface UserJoin {
   fullName: string
   phoneNumber: string | null

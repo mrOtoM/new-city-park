@@ -4,7 +4,7 @@ import type { Role } from '@/lib/auth/roles'
 export interface ProfileFixture {
   id: string
   email: string
-  fullName: string
+  fullName: string | null
   role: string
   phoneNumber: string | null
 }

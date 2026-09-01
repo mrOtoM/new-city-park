@@ -55,14 +55,20 @@ related plan and do not assume the migration is complete.
   `docs/plans/007-authorization-authentication-implementation-b2-plan.md`.
   `public.users.role` is constrained to `user`, `admin`, and `owner`, and the
   last owner cannot be demoted or deleted.
-- Server-side admin checks use `hasAdminCapabilities()` from
-  `lib/auth/roles.ts`, so `admin` and `owner` currently have identical
-  application rights. Add an owner-only capability in `roles.ts` and check it
-  with `can()` at the specific call site; do not reintroduce
-  `role === 'admin'` comparisons.
-- `lib/auth/dal.ts` still resolves roles itself and is not fail-closed; that is
-  `B3`, which is next. Database admin RLS policies still match `'admin'` only,
-  which `B5` must fix before `B4` moves user data off the service-role client.
+- Plan `001` block `B3` (auth DAL, request cache, route protection) is
+  implemented; the record is in
+  `docs/plans/008-authorization-authentication-implementation-b3-plan.md`.
+  `lib/auth/dal.ts` is the only server entry point for auth state: `auth()` is
+  request-cached and fail-closed, and `requireUser()`, `requireCapability()`,
+  `requireAdmin()`, `requireOwner()`, and `authorizeRequest()` are the guards.
+  Every page, Server Action, and Route Handler calls a guard itself; `proxy.ts`
+  and route groups are routing conveniences, not the security boundary.
+- Authorization is decided by capability, never by comparing the role string.
+  Add an owner-only capability in `lib/auth/roles.ts` and check it with `can()`
+  at the specific call site; do not reintroduce `role === 'admin'`.
+- Redirect targets pass through `safeNextPath()` in `lib/auth/redirects.ts`.
+- `B4` is next. Database admin RLS policies still match `'admin'` only, which
+  `B5` must fix before `B4` moves user data off the service-role client.
 
 ## Deferred work registers
 
@@ -187,6 +193,24 @@ see.
 ## Project conventions
 
 - User-facing text and error messages are in Slovak.
+- Code comments are in English everywhere, including TypeScript, TSX, SQL, and
+  configuration files. Slovak stays in user-facing copy only.
+- Comment only what the code cannot say: a non-obvious reason, an invariant, a
+  workaround, or a cross-file dependency. Do not restate what the next line
+  already shows, and do not add section banners to source files.
+- Existing Slovak comments are rewritten when the surrounding code is touched;
+  do not open a separate translation pass unless asked.
+- A type or interface used by more than one module belongs in `lib/types.ts`,
+  imported with `import type`. Do not redeclare the same shape in two files.
+- Runtime modules do not declare their own types. `lib/auth/dal.ts` imports
+  `Session`, `SessionUser`, `RequestAuthorization`, `UserProfileRow`, and
+  `AuthUserMetadata` from `lib/types.ts`.
+- The exception is a definition module, where the type is the deliverable:
+  `lib/auth/roles.ts` owns `Role` and `Capability`, `lib/auth/auth-result.ts`
+  owns `AuthResult`.
+- Component prop interfaces stay in the component file; they are part of its
+  signature, not shared vocabulary. Promote one to `lib/types.ts` as soon as a
+  second file needs it.
 - Reads belong in `services/queries/`.
 - Writes belong in `services/actions/`.
 - Keep service-role access on the server and after the appropriate role check.
