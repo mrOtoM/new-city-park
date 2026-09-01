@@ -1,30 +1,9 @@
-import { supabase, supabaseAdmin } from '@/lib/supabase'
-
-export async function getUserByAuthId(userId: string) {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .single()
-
-  return data
-}
-
-export async function getUser(email: string) {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', email)
-    .single()
-
-  return data
-}
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function updateUserPhone(userId: string, phone: string) {
-  const { error } = await supabaseAdmin
-    .from('users')
-    .update({ phoneNumber: phone })
-    .eq('id', userId)
+  const supabase = await createSupabaseServerClient()
+
+  const { error } = await supabase.from('users').update({ phoneNumber: phone }).eq('id', userId)
 
   if (error) {
     console.error(error)

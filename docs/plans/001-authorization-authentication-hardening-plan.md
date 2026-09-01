@@ -76,7 +76,7 @@ after its own tests and acceptance criteria pass.
 | `B1`  | Test foundation and pure authorization/authentication contracts | Unit tests only; no runtime permission change                   | None (done)             |
 | `B2`  | Three-role data model and registration invariant                | Migration, provisioning, and role-boundary integration tests    | B1               |
 | `B3`  | Auth DAL, request cache, and route protection                   | Unit plus focused request/component tests (done)                | B1, B2 contracts |
-| `B4`  | Supabase client boundaries and service-role removal             | Client-boundary and development integration tests               | B3               |
+| `B4`  | Supabase client boundaries and service-role removal             | Client-boundary and development integration tests (done)        | B3               |
 | `B5`  | RLS, grants, column protection, and ownership enforcement       | Real development RLS/Data API/grant tests                       | B4               |
 | `B6`  | Calendar API, Server Actions, and atomic registration           | API/action integration and selected E2E tests                   | B5               |
 | `B7`  | Login, signup, reset, redirect, and rate-limit hardening        | Auth-flow integration and selected E2E/security tests           | B3, B6           |
@@ -91,7 +91,9 @@ implementation record is in
 `007-authorization-authentication-implementation-b2-plan.md`. `B3` is
 implemented and verified by unit tests and the production build; the
 implementation record is in
-`008-authorization-authentication-implementation-b3-plan.md`. `B4` is the next
+`008-authorization-authentication-implementation-b3-plan.md`. `B4` is implemented; the
+implementation record is in
+`009-authorization-authentication-implementation-b4-plan.md`. `B5` is the next
 block and has no detailed block file yet.
 
 ## B1 - Test foundation and pure authorization/authentication contracts
