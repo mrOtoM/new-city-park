@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Zástupné hodnoty. lib/supabase.ts vyhodí chybu, ak premenné chýbajú,
-      # takže build bez nich neprejde. Do žiadnej databázy sa nepripájame.
+      # Placeholders. The Supabase client modules throw when these are missing,
+      # so the build would fail without them. No database is contacted.
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
