@@ -63,6 +63,9 @@ related plan and do not assume the migration is complete.
   `requireAdmin()`, `requireOwner()`, and `authorizeRequest()` are the guards.
   Every page, Server Action, and Route Handler calls a guard itself; `proxy.ts`
   and route groups are routing conveniences, not the security boundary.
+- Statistics are owner-only: `statistics:view` belongs to `owner`, not `admin`.
+  An admin manages trainings and sees participants; only an owner sees the
+  numbers. Check it with `requireCapability('statistics:view')`.
 - Authorization is decided by capability, never by comparing the role string.
   Add an owner-only capability in `lib/auth/roles.ts` and check it with `can()`
   at the specific call site; do not reintroduce `role === 'admin'`.
@@ -77,9 +80,15 @@ related plan and do not assume the migration is complete.
 - `public.training_capacity` is the single source of truth for training
   occupancy. It bypasses RLS by design, so no column carrying personal data may
   ever be added to it.
-- `B5` is next. Database admin policies still match `'admin'` only and there is
-  no policy letting an admin read another user's row, which is why participant,
-  statistics, and admin-write paths are still on the service role.
+- Plan `001` block `B5` (RLS, grants, column protection) is implemented; the
+  record is in `docs/plans/010-authorization-authentication-implementation-b5-plan.md`.
+  Database policies call `public.has_admin_capabilities()`; extend that function
+  rather than inlining another role subquery. `public.users` no longer carries
+  broad grants: `authenticated` has `SELECT` and `UPDATE ("phoneNumber")` only,
+  and `anon` has nothing.
+- Participant and statistics reads still use the service-role client even though
+  the policies now allow the cookie-bound one. Moving them is a follow-up.
+- `B6` is next.
 
 ## Deferred work registers
 

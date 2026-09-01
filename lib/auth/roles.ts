@@ -36,14 +36,13 @@ const USER_CAPABILITIES = [
   'profile:update-own',
 ] as const satisfies readonly Capability[]
 
-const ADMIN_ONLY_CAPABILITIES = [
-  'training:manage',
-  'participants:view',
-  'statistics:view',
-] as const satisfies readonly Capability[]
+const ADMIN_ONLY_CAPABILITIES = ['training:manage', 'participants:view'] as const satisfies readonly Capability[]
 
-/** Jediná schválená owner-only kapabilita podľa docs/plans/001. */
-const OWNER_ONLY_CAPABILITIES = ['security:break-glass'] as const satisfies readonly Capability[]
+/** Statistics are owner-only by product decision: an admin runs trainings, an owner sees the numbers. */
+const OWNER_ONLY_CAPABILITIES = [
+  'statistics:view',
+  'security:break-glass',
+] as const satisfies readonly Capability[]
 
 /** `role:assign` nesmie pribudnúť: priradenie roly je manuálna DB operácia. */
 export const ROLE_CAPABILITIES = {

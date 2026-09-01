@@ -93,7 +93,8 @@ describe('authorize', () => {
   it('rozlíši bežného, admin a owner používateľa', () => {
     expect(authorize(toAuthResult(identityInput('user')), 'training:register')).toBe(true)
     expect(authorize(toAuthResult(identityInput('user')), 'statistics:view')).toBe(false)
-    expect(authorize(toAuthResult(identityInput('admin')), 'statistics:view')).toBe(true)
+    expect(authorize(toAuthResult(identityInput('admin')), 'participants:view')).toBe(true)
+    expect(authorize(toAuthResult(identityInput('admin')), 'statistics:view')).toBe(false)
     expect(authorize(toAuthResult(identityInput('admin')), 'security:break-glass')).toBe(false)
     expect(authorize(toAuthResult(identityInput('owner')), 'security:break-glass')).toBe(true)
   })
@@ -134,7 +135,7 @@ describe('nezávislosť od prostredia', () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY
 
     try {
-      expect(authorize(toAuthResult(identityInput('admin')), 'statistics:view')).toBe(true)
+      expect(authorize(toAuthResult(identityInput('admin')), 'participants:view')).toBe(true)
     } finally {
       if (url !== undefined) process.env.NEXT_PUBLIC_SUPABASE_URL = url
       if (anon !== undefined) process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = anon

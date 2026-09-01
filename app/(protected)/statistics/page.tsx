@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { CalendarDays, ChevronRight, Users, UserMinus, Percent, UserRound } from 'lucide-react'
 
-import { requireAdmin } from '@/lib/auth/dal'
+import { requireCapability } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { formatDate, formatMonthKey } from '@/lib/utils'
 import {
@@ -58,7 +58,7 @@ function Bar({ value, max }: { value: number; max: number }) {
 }
 
 export default async function StatisticsPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
-  await requireAdmin()
+  await requireCapability('statistics:view')
 
   const [{ month }, { trainings: allTrainings, registrations }] = await Promise.all([searchParams, getStatisticsData()])
 
