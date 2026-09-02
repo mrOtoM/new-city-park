@@ -80,7 +80,7 @@ after its own tests and acceptance criteria pass.
 | `B5`  | RLS, grants, column protection, and ownership enforcement       | Real development RLS/Data API/grant tests (done)                | B4               |
 | `B6`  | Calendar API, Server Actions, and atomic registration           | API/action integration and selected E2E tests (done)            | B5               |
 | `B7`  | Login, signup, reset, redirect, and rate-limit hardening        | Auth-flow integration and selected E2E/security tests           | B3, B6           |
-| `B8`  | Key migration, final audit, regression, and release             | Full regression, E2E, security smoke, build, and release checks | B1-B7            |
+| `B8`  | Key migration, final audit, regression, and release             | Full regression, E2E, security smoke, build, and release checks (audit done, release owner-only) | B1-B7            |
 
 The first detailed block file is `002` and implements `B1`. Future block files
 receive the next available plan prefix while retaining their block identifier.
@@ -100,7 +100,9 @@ implementation record is in
 `011-authorization-authentication-implementation-b6-plan.md`. `B7` is implemented apart from
 reading the configured Supabase rate limits, which needs the dashboard; the
 record is in `012-authorization-authentication-implementation-b7-plan.md`.
-`B8` is the next block and has no detailed block file yet.
+`B8`'s audit and regression half is done and recorded in
+`013-authorization-authentication-implementation-b8-plan.md`; its key-rotation,
+rate-limit, and production-release half is owner-only and still open.
 
 ## B1 - Test foundation and pure authorization/authentication contracts
 

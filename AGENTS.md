@@ -112,7 +112,14 @@ related plan and do not assume the migration is complete.
   whether an account exists. Redirect URLs come from `authCallbackUrl()` in
   `lib/site-url.ts`; never interpolate `NEXT_PUBLIC_SITE_URL` directly.
   The password rule lives once, in `services/validators/password.ts`.
-- `B8` is next.
+- Plan `001` block `B8`: the audit and regression half is done and recorded in
+  `docs/plans/013-authorization-authentication-implementation-b8-plan.md`. The
+  service-role key is absent from both bundles, no regular-user path is
+  privileged, and the full suite passes. Key rotation, the rate-limit reading,
+  and the production release are owner-only and remain open.
+- The production database is behind the code:
+  `20260902073053_registration_rules.sql` must be applied there before the next
+  deploy, or every registration will call a function that does not exist.
 
 ## Deferred work registers
 
