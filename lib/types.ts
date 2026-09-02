@@ -26,6 +26,27 @@ export interface UserProfileRow {
   role: unknown
 }
 
+/**
+ * Expected outcome of a Server Action. Production replaces a thrown error with
+ * an opaque digest, so an expected failure has to come back as a value if the
+ * user is ever to read it.
+ */
+export type ActionResult = { ok: true } | { ok: false; message: string }
+
+/** Result codes returned by the registration functions in the database. */
+export const REGISTRATION_CODES = [
+  'ok',
+  'unauthenticated',
+  'not_found',
+  'past',
+  'already_registered',
+  'full',
+  'deadline_passed',
+  'not_registered',
+] as const
+
+export type RegistrationCode = (typeof REGISTRATION_CODES)[number]
+
 export interface UserJoin {
   fullName: string
   phoneNumber: string | null

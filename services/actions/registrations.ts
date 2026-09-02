@@ -5,14 +5,36 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin, requireUser } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingRegistrationEmail } from '@/lib/email'
+import type { ActionResult, RegistrationCode } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
 import { getTraining } from '@/services/queries/trainings'
 import { registerForTraining, removeParticipantByAdmin, unregisterFromTraining } from '@/services/queries/registrations'
 
-export async function registerForTrainingAction(trainingId: number) {
-  const user = await requireUser()
+/** Every code the database can return, so a new one cannot be added silently. */
+const MESSAGES: Record<Exclude<RegistrationCode, 'ok'>, string> = {
+  unauthenticated: 'Prihlásenie vypršalo, prihlás sa znova',
+  not_found: 'Tréning sa nenašiel',
+  past: 'Tréning už prebehol',
+  already_registered: 'Už si prihlásený na tento tréning',
+  full: 'Tréning je už plne obsadený',
+  deadline_passed: 'Odhlásenie už nie je možné, termín prešiel',
+  not_registered: 'Na tento tréning nie si prihlásený',
+}
 
-  await registerForTraining(trainingId, user.id)
+function toResult(code: RegistrationCode): ActionResult {
+  return code === 'ok' ? { ok: true } : { ok: false, message: MESSAGES[code] }
+}
+
+function revalidateTrainingViews() {
+  revalidatePath('/calendar')
+  revalidatePath('/trainings')
+}
+
+export async function registerForTrainingAction(trainingId: number): Promise<ActionResult> {
+  const user = await requireUser()
+  const result = toResult(await registerForTraining(trainingId))
+
+  if (!result.ok) return result
 
   const training = await getTraining(trainingId)
 
@@ -31,23 +53,19 @@ export async function registerForTrainingAction(trainingId: number) {
     ).catch(console.error)
   }
 
-  revalidatePath('/calendar')
-  revalidatePath('/trainings')
+  revalidateTrainingViews()
+
+  return result
 }
 
-export async function unregisterFromTrainingAction(trainingId: number) {
-  const user = await requireUser()
+export async function unregisterFromTrainingAction(trainingId: number): Promise<ActionResult> {
+  await requireUser()
 
-  const training = await getTraining(trainingId)
+  const result = toResult(await unregisterFromTraining(trainingId))
 
-  if (training?.unregisterDeadline && new Date() > new Date(String(training.unregisterDeadline))) {
-    throw new Error('Odhlásenie už nie je možné – deadline prešiel')
-  }
+  if (result.ok) revalidateTrainingViews()
 
-  await unregisterFromTraining(trainingId, user.id)
-
-  revalidatePath('/calendar')
-  revalidatePath('/trainings')
+  return result
 }
 
 export async function removeParticipantAction(trainingId: number, userId: string) {
@@ -60,6 +78,5 @@ export async function removeParticipantAction(trainingId: number, userId: string
   await removeParticipantByAdmin(trainingId, userId)
 
   revalidatePath(`/trainings/${trainingId}/edit`)
-  revalidatePath('/calendar')
-  revalidatePath('/trainings')
+  revalidateTrainingViews()
 }

@@ -1,7 +1,7 @@
 import { requireCapability } from '@/lib/auth/dal'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import type { TrainingParticipants, UserJoin } from '@/lib/types'
+import { REGISTRATION_CODES, type RegistrationCode, type TrainingParticipants, type UserJoin } from '@/lib/types'
 
 function parseUserJoin(users: unknown): UserJoin | null {
   if (users && typeof users === 'object' && 'fullName' in users) {
@@ -10,71 +10,41 @@ function parseUserJoin(users: unknown): UserJoin | null {
   return null
 }
 
-export async function registerForTraining(trainingId: number, userId: string) {
+/**
+ * Both calls delegate every rule to a database function: capacity under a row
+ * lock, the training's own start time, and the unregister deadline. The acting
+ * user comes from auth.uid() inside the function, never from an argument.
+ */
+async function callRegistrationFunction(name: string, trainingId: number): Promise<RegistrationCode> {
   const supabase = await createSupabaseServerClient()
 
-  const { data: existing } = await supabase
-    .from('training_registrations')
-    .select('id, cancelled_at')
-    .eq('training_id', trainingId)
-    .eq('user_id', userId)
-    .single()
-
-  if (existing && !existing.cancelled_at) {
-    throw new Error('Už si prihlásený na tento tréning')
-  }
-
-  const { data: capacity } = await supabase
-    .from('training_capacity')
-    .select('max_participants, active_count')
-    .eq('training_id', trainingId)
-    .single()
-
-  if (capacity?.max_participants && capacity.active_count >= capacity.max_participants) {
-    throw new Error('Tréning je už plne obsadený')
-  }
-
-  if (existing && existing.cancelled_at) {
-    const { error } = await supabase
-      .from('training_registrations')
-      .update({ cancelled_at: null, registered_at: new Date().toISOString() })
-      .eq('id', existing.id)
-
-    if (error) {
-      console.error(error)
-      throw new Error('Nepodarilo sa prihlásiť na tréning')
-    }
-    return
-  }
-
-  const { error } = await supabase.from('training_registrations').insert({ training_id: trainingId, user_id: userId })
+  const { data, error } = await supabase.rpc(name, { p_training_id: trainingId })
 
   if (error) {
     console.error(error)
-    throw new Error('Nepodarilo sa prihlásiť na tréning')
+    throw new Error('Databáza odmietla operáciu')
   }
+
+  return isRegistrationCode(data) ? data : 'not_found'
 }
 
-export async function unregisterFromTraining(trainingId: number, userId: string) {
-  const supabase = await createSupabaseServerClient()
+function isRegistrationCode(value: unknown): value is RegistrationCode {
+  return typeof value === 'string' && (REGISTRATION_CODES as readonly string[]).includes(value)
+}
 
-  const { error } = await supabase
-    .from('training_registrations')
-    .update({ cancelled_at: new Date().toISOString() })
-    .eq('training_id', trainingId)
-    .eq('user_id', userId)
-    .is('cancelled_at', null)
+export function registerForTraining(trainingId: number): Promise<RegistrationCode> {
+  return callRegistrationFunction('register_for_training', trainingId)
+}
 
-  if (error) {
-    console.error(error)
-    throw new Error('Nepodarilo sa odhlásiť z tréningu')
-  }
+export function unregisterFromTraining(trainingId: number): Promise<RegistrationCode> {
+  return callRegistrationFunction('unregister_from_training', trainingId)
 }
 
 /**
  * Soft-cancels someone else's registration, so it verifies the capability
- * itself rather than trusting the calling page. Privileged until B5 adds an
- * admin UPDATE policy on training_registrations.
+ * itself rather than trusting the calling page. Still privileged: B5 added the
+ * admin UPDATE policy, but moving this call to the cookie-bound client is a
+ * separate change.
  */
 export async function removeParticipantByAdmin(trainingId: number, userId: string) {
   await requireCapability('training:manage')
@@ -99,7 +69,7 @@ export async function removeParticipantByAdmin(trainingId: number, userId: strin
   }
 }
 
-/** Returns participant PII, so it verifies the capability itself. Privileged until B5. */
+/** Returns participant PII, so it verifies the capability itself. */
 export async function getTrainingParticipants(trainingId: number): Promise<TrainingParticipants> {
   await requireCapability('participants:view')
 
