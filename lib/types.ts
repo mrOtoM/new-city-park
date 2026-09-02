@@ -26,14 +26,8 @@ export interface UserProfileRow {
   role: unknown
 }
 
-/**
- * Expected outcome of a Server Action. Production replaces a thrown error with
- * an opaque digest, so an expected failure has to come back as a value if the
- * user is ever to read it.
- */
 export type ActionResult = { ok: true } | { ok: false; message: string }
 
-/** Result codes returned by the registration functions in the database. */
 export const REGISTRATION_CODES = [
   'ok',
   'unauthenticated',
@@ -47,7 +41,6 @@ export const REGISTRATION_CODES = [
 
 export type RegistrationCode = (typeof REGISTRATION_CODES)[number]
 
-/** Just enough to notify someone; never widen this into a profile DTO. */
 export interface ParticipantContact {
   name: string
   email: string | null

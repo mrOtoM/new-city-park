@@ -288,6 +288,9 @@ Consequences, which every production change must respect:
   do not open a separate translation pass unless asked.
 - A type or interface used by more than one module belongs in `lib/types.ts`,
   imported with `import type`. Do not redeclare the same shape in two files.
+- Type declarations carry no comments. A field list is already the
+  documentation; if a shape needs prose to be understood, the name is wrong or
+  the reason belongs where the type is used. `lib/types.ts` stays comment-free.
 - Runtime modules do not declare their own types. `lib/auth/dal.ts` imports
   `Session`, `SessionUser`, `RequestAuthorization`, `UserProfileRow`, and
   `AuthUserMetadata` from `lib/types.ts`.
