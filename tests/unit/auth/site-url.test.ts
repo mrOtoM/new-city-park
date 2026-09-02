@@ -13,7 +13,6 @@ describe('siteOrigin', () => {
   })
 
   it.each([
-    ['chýbajúca hodnota', undefined],
     ['prázdny reťazec', ''],
     ['bez protokolu', 'newcitypark.sk'],
     ['nepodporovaný protokol', 'ftp://newcitypark.sk'],
@@ -21,6 +20,31 @@ describe('siteOrigin', () => {
     ['s parametrom', 'https://newcitypark.sk/?a=1'],
   ])('odmietne %s', (_label, input) => {
     expect(() => siteOrigin(input)).toThrow()
+  })
+
+  // The default argument reads process.env, so the variable has to be cleared
+  // here; CI sets it and the assertion would otherwise pass only locally.
+  it('odmietne chýbajúcu premennú prostredia', () => {
+    const saved = process.env.NEXT_PUBLIC_SITE_URL
+    delete process.env.NEXT_PUBLIC_SITE_URL
+
+    try {
+      expect(() => siteOrigin()).toThrow()
+    } finally {
+      if (saved !== undefined) process.env.NEXT_PUBLIC_SITE_URL = saved
+    }
+  })
+
+  it('prečíta premennú prostredia, keď argument nie je zadaný', () => {
+    const saved = process.env.NEXT_PUBLIC_SITE_URL
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://newcitypark.sk/'
+
+    try {
+      expect(siteOrigin()).toBe('https://newcitypark.sk')
+    } finally {
+      if (saved === undefined) delete process.env.NEXT_PUBLIC_SITE_URL
+      else process.env.NEXT_PUBLIC_SITE_URL = saved
+    }
   })
 })
 

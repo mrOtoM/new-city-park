@@ -194,10 +194,12 @@ single `emailLayout` shell so message chrome stays consistent.
 
 Implemented notifications:
 
-| Trigger                         | Function                        | Recipients              |
-| ------------------------------- | ------------------------------- | ----------------------- |
-| A user registers for a training | `sendTrainingRegistrationEmail` | the registering user    |
-| An admin deletes a training     | `sendTrainingCancelledEmails`   | all active participants |
+| Trigger                              | Function                          | Recipients              |
+| ------------------------------------ | --------------------------------- | ----------------------- |
+| A user registers for a training      | `sendTrainingRegistrationEmail`   | the registering user    |
+| A user unregisters themselves        | `sendTrainingUnregistrationEmail` | that user               |
+| An admin removes a participant       | `sendTrainingUnregistrationEmail` | the removed participant |
+| An admin deletes a training          | `sendTrainingCancelledEmails`     | all active participants |
 
 Invariants:
 
@@ -210,6 +212,11 @@ Invariants:
   development works without mail credentials.
 - Copy is Slovak; `EMAIL_FROM` sets the sender and falls back to a project
   default.
+- One function may serve two triggers when the message differs only in wording,
+  as `sendTrainingUnregistrationEmail` does: being removed by an organizer is
+  news to the recipient, while confirming their own action is not.
+- A recipient without an address is skipped, never an error: the notification
+  is a side effect of the operation, not part of it.
 
 Changing a training does not notify anyone, and there is no cancelled training
 state — deletion is the only cancellation path today.
