@@ -209,6 +209,68 @@ Application-only unless a decision moves flows server-side. No migration is
 expected. Rollback is a branch revert; the previous behavior discloses more, so
 a revert widens exposure rather than breaking anything.
 
+## Implementation record
+
+Branch `Auth-b7-auth-flow-hardening`, created from `development` on 2026-09-02.
+Application-only; no migration.
+
+Decisions taken, both as recommended:
+
+- The auth flows stay client-side.
+- No custom rate limiter, and therefore no new dependency.
+
+**Correction to this plan's baseline.** The section above claimed signup
+discloses existing accounts. Probing the development project showed the
+opposite: `signUp` with an existing address returns **no error**, a user-shaped
+object, and `identities: []`, which is Supabase's own obfuscation with email
+confirmation enabled. The `'Tento email je už zaregistrovaný'` branch was
+therefore unreachable dead code, not a live oracle. It is removed anyway,
+because it would become an oracle the moment email confirmation is switched
+off.
+
+Delivered:
+
+- `lib/site-url.ts` — `siteOrigin()` validates `NEXT_PUBLIC_SITE_URL` and
+  throws on a missing value, a missing protocol, a non-http scheme, or a URL
+  carrying a path or query. `authCallbackUrl()` builds the only approved
+  callback. The three pages that interpolated the variable now call it, and
+  a configuration failure shows a generic Slovak message instead of producing
+  `undefined/auth/callback`.
+- `services/validators/password.ts` — the password rule and its message exist
+  once. `register` and `reset-password` call `validatePasswordPair`.
+- `lib/auth/messages.ts` — every auth failure maps through one module.
+  Sign-in returns a single message for any credential failure; signup returns
+  one message for everything except an invalid address or a weak password;
+  reset is always generic. All three map `429` to their own message, which
+  login previously did not.
+- `app/error.tsx` — generic Slovak copy plus the digest; the detail goes to the
+  console. Closes `ENG-004`.
+
+Verification performed:
+
+| Check                                              | Result                                          |
+| --------------------------------------------------- | ------------------------------------------------- |
+| `npm test`                                         | 201 passed (was 170)                             |
+| `npm run test:db`                                  | 43 passed (was 39)                               |
+| Signup with an existing address, against development | no error, `identities: []`, no new row, original password still valid |
+| Reset for a non-existent address                   | no error, same shape as a real one               |
+| `npx tsc --noEmit`, `prettier`, `npm run build`    | Passed                                           |
+| Development database after the run                 | no test accounts left                            |
+
+Not done:
+
+- **The configured Supabase rate limits were not read.** That needs the
+  dashboard, which this work could not open. The evidence that limits exist is
+  behavioral: the suite hit `Request rate limit reached` on 2026-09-01. Someone
+  must open Authentication → Rate Limits, write the numbers into this file, and
+  judge whether they are sufficient. Until then this block's rate-limit
+  acceptance criterion is unmet.
+- The password reset was not exercised end to end in development; only the
+  request half is covered. Supabase rejects test domains, so the confirmation
+  half needs a real inbox.
+- `ENG-009` stays open. The password rule is shared now, but nothing validates
+  the phone number or the training form.
+
 ## Explicit testing decision
 
 Enumeration is a behavioral claim about a live auth service, so it is tested
