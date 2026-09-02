@@ -117,9 +117,11 @@ related plan and do not assume the migration is complete.
   service-role key is absent from both bundles, no regular-user path is
   privileged, and the full suite passes. Key rotation, the rate-limit reading,
   and the production release are owner-only and remain open.
-- The production database is behind the code:
-  `20260902073053_registration_rules.sql` must be applied there before the next
-  deploy, or every registration will call a function that does not exist.
+- The production database is behind the code, and
+  `20260902073053_registration_rules.sql` must be applied there in two steps,
+  not one: its functions before the deploy, its anon revokes only after. The
+  deployed code still reads trainings as `anon`, so revoking first breaks the
+  live site. The procedure is in plan `013`.
 
 ## Deferred work registers
 

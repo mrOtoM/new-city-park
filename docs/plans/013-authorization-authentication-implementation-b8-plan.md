@@ -120,19 +120,31 @@ every active session at once.
 
 ### 3. Release to production
 
-The database is already ahead of the code for `B2`–`B5`, and behind for `B6`.
-Before deploying:
+The database is ahead of the code for `B2`–`B5` and behind for `B6`. The `B6`
+migration cannot be applied in one step, because its two halves point in
+opposite directions:
 
-- apply `20260902073053_registration_rules.sql` in the production SQL Editor,
-  because the CLI cannot reach that project (`ENG-010`);
-- verify `public.register_for_training` and `public.unregister_from_training`
-  exist, and that `anon` can no longer read `public.trainings`;
-- confirm `NEXT_PUBLIC_SITE_URL` in the production environment is the real
-  origin, with no trailing path — `siteOrigin()` now throws otherwise;
-- take a backup (`npm run db:backup`).
+- the deployed code on `main` reads trainings through the cookie-less anon
+  client, so `REVOKE ALL ON public.trainings FROM anon` breaks it immediately;
+- the new code calls `register_for_training`, so it cannot run before the
+  function exists.
 
-Deploy the code only after those pass. The order is not negotiable: the code
-calls the two functions on every registration.
+Apply it as expand → migrate → contract, which is what plan `001` requires:
+
+1. Back up (`npm run db:backup`) and confirm `NEXT_PUBLIC_SITE_URL` in the
+   production environment is a bare origin — `siteOrigin()` now throws
+   otherwise.
+2. **Expand.** Paste only sections 1 and 2 of
+   `20260902073053_registration_rules.sql`: both functions and their grants.
+   The deployed code is unaffected by them.
+3. **Migrate.** Merge to `main` and let the deploy finish. Verify the
+   post-release checklist below.
+4. **Contract.** Only then paste section 3: the policy drop and the two anon
+   revokes.
+
+Between steps 2 and 4 the schedule is still readable by `anon`, exactly as it
+is today. Reverting the deploy after step 4 requires re-granting `anon` on
+`public.trainings` first, so do not skip the verification in step 3.
 
 ### 4. Post-release verification
 
