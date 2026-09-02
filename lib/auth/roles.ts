@@ -23,6 +23,7 @@ export const CAPABILITIES = [
   'training:manage',
   'participants:view',
   'statistics:view',
+  'users:view',
   'security:break-glass',
   'role:assign',
 ] as const
@@ -41,6 +42,7 @@ const ADMIN_ONLY_CAPABILITIES = ['training:manage', 'participants:view'] as cons
 /** Statistics are owner-only by product decision: an admin runs trainings, an owner sees the numbers. */
 const OWNER_ONLY_CAPABILITIES = [
   'statistics:view',
+  'users:view',
   'security:break-glass',
 ] as const satisfies readonly Capability[]
 

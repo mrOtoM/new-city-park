@@ -52,6 +52,14 @@ export interface UserJoin {
   email: string | null
 }
 
+export interface RegisteredUser {
+  id: string
+  name: string
+  email: string | null
+  phone: string | null
+  registeredAt: string
+}
+
 export interface TrainingStat {
   id: number
   type: string

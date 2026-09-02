@@ -63,6 +63,10 @@ related plan and do not assume the migration is complete.
   `requireAdmin()`, `requireOwner()`, and `authorizeRequest()` are the guards.
   Every page, Server Action, and Route Handler calls a guard itself; `proxy.ts`
   and route groups are routing conveniences, not the security boundary.
+- The registered-account list at `/users` is owner-only: `users:view` belongs
+  to `owner`. It lists only accounts whose role is `user`, newest first, with
+  name, email, phone, and registration date, and reads them with the
+  cookie-bound client under the `Admin can view all users` policy.
 - Statistics are owner-only: `statistics:view` belongs to `owner`, not `admin`.
   An admin manages trainings and sees participants; only an owner sees the
   numbers. Check it with `requireCapability('statistics:view')`.
