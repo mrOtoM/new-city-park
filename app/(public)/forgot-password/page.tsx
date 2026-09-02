@@ -4,6 +4,8 @@ import Image from 'next/image'
 import bg6 from '@/public/bg6.png'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
+import { AUTH_MESSAGES, resetErrorMessage } from '@/lib/auth/messages'
+import { authCallbackUrl } from '@/lib/site-url'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { useState } from 'react'
 import { Mail } from 'lucide-react'
@@ -19,17 +21,23 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError('')
 
-    const supabase = createSupabaseBrowserClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?type=recovery`,
-    })
+    let callbackUrl: string
 
+    try {
+      callbackUrl = authCallbackUrl({ type: 'recovery' })
+    } catch (configurationError) {
+      console.error(configurationError)
+      setError(AUTH_MESSAGES.misconfigured)
+      setLoading(false)
+      return
+    }
+
+    const supabase = createSupabaseBrowserClient()
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: callbackUrl })
+
+    // The outcome must read the same for a known and an unknown address.
     if (error) {
-      if (error.status === 429 || error.message.includes('rate')) {
-        setError('Príliš veľa pokusov. Skúste to neskôr.')
-      } else {
-        setError('Nepodarilo sa odoslať email. Skúste to znova.')
-      }
+      setError(resetErrorMessage(error))
       setLoading(false)
       return
     }

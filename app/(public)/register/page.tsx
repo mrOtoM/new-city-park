@@ -4,7 +4,10 @@ import Image from 'next/image'
 import bg6 from '@/public/bg6.png'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
+import { AUTH_MESSAGES, signUpErrorMessage } from '@/lib/auth/messages'
+import { authCallbackUrl } from '@/lib/site-url'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { validatePasswordPair } from '@/services/validators/password'
 import { useState } from 'react'
 import { Mail } from 'lucide-react'
 
@@ -24,13 +27,10 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
 
-    if (password !== passwordConfirm) {
-      setError('Heslá sa nezhodujú')
-      return
-    }
+    const invalid = validatePasswordPair(password, passwordConfirm)
 
-    if (password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setError('Heslo musí mať aspoň 8 znakov, obsahovať malé písmeno, veľké písmeno a číslicu')
+    if (invalid) {
+      setError(invalid)
       return
     }
 
@@ -50,18 +50,10 @@ export default function RegisterPage() {
       },
     })
 
+    // Supabase answers an existing address with a success-shaped response, and
+    // the mapping never adds a message that would give one away either.
     if (error) {
-      if (error.status === 429 || error.message.includes('rate')) {
-        setError('Príliš veľa pokusov. Skúste to neskôr.')
-      } else if (error.message.includes('invalid')) {
-        setError('Neplatná emailová adresa')
-      } else if (error.message.includes('already registered')) {
-        setError('Tento email je už zaregistrovaný')
-      } else if (error.message.includes('password')) {
-        setError('Heslo musí mať aspoň 8 znakov, veľké a malé písmeno a číslicu')
-      } else {
-        setError('Registrácia sa nepodarila. Skúste to znova.')
-      }
+      setError(signUpErrorMessage(error))
       setLoading(false)
       return
     }
@@ -77,11 +69,11 @@ export default function RegisterPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        redirectTo: authCallbackUrl(),
       },
     })
     if (error) {
-      setError('Nepodarilo sa prihlásiť cez Google')
+      setError(AUTH_MESSAGES.googleFailed)
       setGoogleLoading(false)
     }
   }

@@ -105,7 +105,14 @@ related plan and do not assume the migration is complete.
   New actions follow that shape.
 - `public.trainings` is no longer readable by `anon`, and `app/api/` no longer
   exists.
-- `B7` is next.
+- Plan `001` block `B7` (auth flows) is implemented except for reading the
+  Supabase rate-limit configuration; the record is in
+  `docs/plans/012-authorization-authentication-implementation-b7-plan.md`.
+  Auth failure copy lives in `lib/auth/messages.ts` and must never reveal
+  whether an account exists. Redirect URLs come from `authCallbackUrl()` in
+  `lib/site-url.ts`; never interpolate `NEXT_PUBLIC_SITE_URL` directly.
+  The password rule lives once, in `services/validators/password.ts`.
+- `B8` is next.
 
 ## Deferred work registers
 
