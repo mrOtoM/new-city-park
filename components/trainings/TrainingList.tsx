@@ -89,15 +89,15 @@ export default function TrainingList({
     ? visibleTrainings.filter((training) => optimistic.registrations.includes(training.id))
     : visibleTrainings
 
+  // The optimistic change lives only inside the transition, so a failed result
+  // rolls it back on its own; the message is what the user needs.
   const handleRegister = (trainingId: number) => {
     setErrorMsg(null)
     startTransition(async () => {
       applyChange({ trainingId, registered: true })
-      try {
-        await registerForTrainingAction(trainingId)
-      } catch (error) {
-        setErrorMsg(error instanceof Error ? error.message : 'Nepodarilo sa prihlásiť')
-      }
+      const result = await registerForTrainingAction(trainingId)
+
+      if (!result.ok) setErrorMsg(result.message)
     })
   }
 
@@ -108,11 +108,9 @@ export default function TrainingList({
     setConfirmTraining(null)
     startTransition(async () => {
       applyChange({ trainingId, registered: false })
-      try {
-        await unregisterFromTrainingAction(trainingId)
-      } catch (error) {
-        setErrorMsg(error instanceof Error ? error.message : 'Nepodarilo sa odhlásiť')
-      }
+      const result = await unregisterFromTrainingAction(trainingId)
+
+      if (!result.ok) setErrorMsg(result.message)
     })
   }
 

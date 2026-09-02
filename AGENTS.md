@@ -92,7 +92,20 @@ related plan and do not assume the migration is complete.
   and `anon` has nothing.
 - Participant and statistics reads still use the service-role client even though
   the policies now allow the cookie-bound one. Moving them is a follow-up.
-- `B6` is next.
+- Plan `001` block `B6` (calendar API, actions, atomic registration) is
+  implemented; the record is in
+  `docs/plans/011-authorization-authentication-implementation-b6-plan.md`.
+  Registration and unregistration are database functions
+  (`public.register_for_training`, `public.unregister_from_training`): they hold
+  the capacity, start-time, and deadline rules, take the acting user from
+  `auth.uid()`, and lock the training row so capacity cannot be exceeded. Do not
+  reintroduce a read-then-write in TypeScript.
+- Registration actions return `ActionResult` instead of throwing for expected
+  failures, because production replaces a thrown message with an opaque digest.
+  New actions follow that shape.
+- `public.trainings` is no longer readable by `anon`, and `app/api/` no longer
+  exists.
+- `B7` is next.
 
 ## Deferred work registers
 

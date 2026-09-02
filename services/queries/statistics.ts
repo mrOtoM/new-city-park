@@ -9,7 +9,7 @@ function parseUserName(users: unknown) {
   return 'Neznámy'
 }
 
-/** Reads every user's registrations and names, so it verifies the capability itself. Privileged until B5. */
+/** Reads every user's registrations and names, so it verifies the capability itself. */
 export async function getStatisticsData(): Promise<StatisticsData> {
   await requireCapability('statistics:view')
 

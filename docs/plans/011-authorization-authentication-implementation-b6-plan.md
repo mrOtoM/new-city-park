@@ -225,6 +225,69 @@ them, exactly as in `B4`. Rollback is dropping the two functions and restoring
 the anon policy; the application would then need the previous code, so this is
 a forward-fix block rather than a revert-friendly one.
 
+## Implementation record
+
+Branch `Auth-b6-actions-and-capacity`, created from `development` on
+2026-09-02.
+
+Decisions taken:
+
+- **`/api/calendar` is deleted.** Nothing in the repository called it, and no
+  external consumer was named. `app/api/` is gone entirely.
+- **The capacity rule lives in the database**, in
+  `public.register_for_training`.
+
+Delivered:
+
+- `supabase/migrations/20260902073053_registration_rules.sql`:
+  `register_for_training` and `unregister_from_training`, both
+  `SECURITY DEFINER` with `search_path`, deriving the user from `auth.uid()`;
+  the `Anon can view trainings` policy dropped; `REVOKE ALL` on
+  `public.trainings` and `public.training_registrations` from `anon`; `EXECUTE`
+  on both functions granted to `authenticated` only.
+- The registration function takes `FOR UPDATE` on the training row, so
+  concurrent callers serialize instead of both passing the capacity check.
+- Both functions compare against `now() AT TIME ZONE 'Europe/Bratislava'`,
+  because training datetimes are stored as naive local time.
+- `ActionResult`, `REGISTRATION_CODES`, and `RegistrationCode` in
+  `lib/types.ts`; `services/queries/registrations.ts` reduced to two RPC calls;
+  both registration actions return `ActionResult`; `TrainingList` reads the
+  result instead of catching a thrown message.
+- `tests/integration/registration.test.ts` with parallel capacity cases, and
+  `tests/unit/actions/registrations.test.ts` for the code-to-message mapping.
+
+Two defects the tests found, both fixed here:
+
+- Dropping the anon policy left `anon` holding the table grant, so RLS returned
+  an empty list rather than a denial. A future policy would have silently
+  re-opened the table. The grant is now revoked.
+- `REVOKE ... FROM public` did not remove `EXECUTE` for `anon`, because
+  Supabase grants it to `anon` explicitly through default privileges. The
+  revoke now names `anon`.
+
+One pre-existing bug fixed as a side effect: the unregister deadline was
+compared in JavaScript against a naive timestamp, which a UTC production server
+read as UTC. The comparison now happens in SQL in the local frame.
+
+Verification performed:
+
+| Check                                          | Result                                     |
+| ----------------------------------------------- | -------------------------------------------- |
+| `npm run test:db`                              | 39 passed (was 27)                          |
+| Two parallel registrations, capacity 1         | exactly one `ok`, one `full`                |
+| Five parallel registrations, capacity 2        | exactly two `ok`, three `full`              |
+| `npm test`                                     | 170 passed (was 159)                        |
+| `npx tsc --noEmit`, `prettier`, `npm run build` | Passed; the route table no longer lists `/api/calendar` |
+| Development database after the run             | no test accounts, no stray trainings        |
+
+Not done:
+
+- Training create/update/delete still throw on expected failures such as a
+  missing form field. `ENG-005` stays open for those.
+- The Supabase auth endpoint rate-limits sign-ins, so the integration file
+  creates five sessions once and reuses them. A test needing more parallel
+  identities than that must extend the pool, not sign in per case.
+
 ## Explicit testing decision
 
 The capacity fix is a concurrency claim, and a concurrency claim is only
