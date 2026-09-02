@@ -98,7 +98,9 @@ implementation record is in
 `010-authorization-authentication-implementation-b5-plan.md`. `B6` is implemented; the
 implementation record is in
 `011-authorization-authentication-implementation-b6-plan.md`. `B7` is the next
-block and has no detailed block file yet.
+block; its detailed file is
+`012-authorization-authentication-implementation-b7-plan.md`, written but not
+yet implemented.
 
 ## B1 - Test foundation and pure authorization/authentication contracts
 
