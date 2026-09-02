@@ -5,7 +5,9 @@ import bg6 from '@/public/bg6.png'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { AUTH_MESSAGES, signInErrorMessage } from '@/lib/auth/messages'
 import { safeNextPath } from '@/lib/auth/redirects'
+import { authCallbackUrl } from '@/lib/site-url'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -31,7 +33,7 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError('Nesprávne prihlasovacie údaje')
+      setError(signInErrorMessage(error))
       setLoading(false)
       return
     }
@@ -44,15 +46,19 @@ export default function LoginPage() {
     setGoogleLoading(true)
     setError('')
     const supabase = createSupabaseBrowserClient()
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(nextPath())}`,
-      },
-    })
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: authCallbackUrl({ next: nextPath() }) },
+      })
 
-    if (error) {
-      setError('Nepodarilo sa prihlásiť cez Google')
+      if (error) {
+        setError(AUTH_MESSAGES.googleFailed)
+        setGoogleLoading(false)
+      }
+    } catch (configurationError) {
+      console.error(configurationError)
+      setError(AUTH_MESSAGES.misconfigured)
       setGoogleLoading(false)
     }
   }

@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 
-// Klient sa vytvára až pri odoslaní. `new Resend(undefined)` vyhodí výnimku,
-// a na úrovni modulu by tým zhodil build aj import v prostredí bez kľúča.
+// Built on first send. `new Resend(undefined)` throws, and at module level that
+// would break the build and every import in an environment without the key.
 let client: Resend | null = null
 
 function resendClient() {
@@ -68,6 +68,56 @@ export async function sendTrainingRegistrationEmail(
 
   if (error) {
     console.error('Failed to send registration email', error)
+  }
+}
+
+/**
+ * Sent when a registration ends: either the participant unregistered, or an
+ * admin removed them. The two cases read differently, because only one of them
+ * is news to the recipient.
+ */
+export async function sendTrainingUnregistrationEmail(
+  participant: { name: string; email: string },
+  trainingLabel: string,
+  trainingDatetime: string,
+  options: { byAdmin?: boolean } = {},
+) {
+  const resend = resendClient()
+
+  if (!resend || !participant.email) return
+
+  const safeName = escapeHtml(participant.name)
+  const safeLabel = escapeHtml(trainingLabel)
+  const safeDatetime = escapeHtml(trainingDatetime)
+
+  const heading = options.byAdmin ? 'Boli ste odhlásený z tréningu' : 'Odhlásenie z tréningu potvrdené'
+  const explanation = options.byAdmin
+    ? `<p>
+         Z tréningu <strong>${safeLabel}</strong>, ktorý sa koná
+         <strong>${safeDatetime}</strong>, ťa odhlásil organizátor.
+       </p>
+       <p>Ak si myslíš, že ide o omyl, ozvi sa nám.</p>`
+    : `<p>
+         Odhlásili sme ťa z tréningu <strong>${safeLabel}</strong>, ktorý sa koná
+         <strong>${safeDatetime}</strong>.
+       </p>
+       <p>Ak si to rozmyslíš, môžeš sa prihlásiť znova, kým je voľné miesto.</p>`
+
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: participant.email,
+    subject: `Odhlásenie z tréningu – ${trainingLabel}`,
+    html: emailLayout(
+      heading,
+      `
+            <p>Ahoj ${safeName},</p>
+            ${explanation}
+      `,
+    ),
+  })
+
+  if (error) {
+    console.error('Failed to send unregistration email', error)
   }
 }
 

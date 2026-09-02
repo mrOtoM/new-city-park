@@ -168,7 +168,7 @@ become the authority that grants access.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `lib/supabase/browser.ts` | Browser-only publishable/legacy anon client for auth and RLS-protected browser operations                                      |
 | `lib/supabase/server.ts`  | Cookie-bound SSR client for authenticated Server Components, Server Actions, Route Handlers, DAL, and regular-user data access |
-| `lib/supabase/session.ts` | Session refresh used by `proxy.ts`; it does not grant application capabilities                                                 |
+| `lib/supabase/session.ts` | Session refresh used by `proxy.ts`; it does not grant application capabilities. Not extracted yet: `proxy.ts` still builds this client inline |
 | `lib/supabase/admin.ts`   | `server-only` privileged client for explicitly approved admin/owner/system operations after an appropriate check               |
 
 The privileged client must fail closed when its secret is missing. It must
@@ -219,8 +219,9 @@ out of the response and logs.
 - Authenticated requests without the required capability return `403`.
 - API boundaries return minimum explicit DTOs, never unrestricted
   `select('*')` results.
-- `/api/calendar` is authenticated unless a separately reviewed public
-  calendar contract is intentionally introduced.
+- The application currently has no Route Handler under `app/api/`. `B6`
+  deleted `/api/calendar`, which returned every training to anyone and had no
+  caller. A new one requires the rules above and a named consumer.
 - Redirect responses are for browser navigation; APIs use status codes and
   typed response bodies.
 
@@ -310,6 +311,5 @@ determine implementation status.
 
 | ID         | Deferred finding and exit condition                                                                                                                                                                                 | Status  | Tracking                    |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------- |
-| `AUTH-006` | `/api/calendar`, directly callable Server Actions, and registration capacity are not fully protected/atomic. `registerForTrainingAction` also accepts any training id, including one whose datetime has passed; only the UI filters those.                                                                                                        | Planned | Plan `001` B6               |
-| `AUTH-007` | Login/signup/reset flows lack the complete rate-limit, redirect, site-URL, account-enumeration, and safe-error contract.                                                                                            | Planned | Plan `001` B7               |
-| `AUTH-008` | Legacy key migration and the final full security/release audit remain outstanding.                                                                                                                                  | Planned | Plan `001` B8               |
+| `AUTH-007` | Redirects, site-URL validation, enumeration, and safe error copy were closed in `B7`. What remains: nobody has read the project rate limits in the Supabase dashboard and judged whether they suffice. | Open | Manual dashboard step, recorded in plan `012` |
+| `AUTH-008` | The audit is done and recorded in plan `013`. Both projects still use legacy JWT keys (valid to 2035 and 2036); migrating to publishable/secret keys is an owner decision that has not been made. | Open    | Owner decision, recorded in plan `013` |

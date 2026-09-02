@@ -79,7 +79,11 @@ related plan and do not assume the migration is complete.
   its secret and never falls back to anon.
 - `public.training_capacity` is the single source of truth for training
   occupancy. It bypasses RLS by design, so no column carrying personal data may
-  ever be added to it.
+  ever be added to it. Supabase labels it `UNRESTRICTED` in the Table Editor;
+  that is expected. Do not "fix" it by switching the view to
+  `security_invoker = on` — RLS would then hide other users' registrations and
+  every count would silently drop to the viewer's own. Access is limited by the
+  grant instead: `authenticated` may select, `anon` may not.
 - Plan `001` block `B5` (RLS, grants, column protection) is implemented; the
   record is in `docs/plans/010-authorization-authentication-implementation-b5-plan.md`.
   Database policies call `public.has_admin_capabilities()`; extend that function
@@ -88,7 +92,36 @@ related plan and do not assume the migration is complete.
   and `anon` has nothing.
 - Participant and statistics reads still use the service-role client even though
   the policies now allow the cookie-bound one. Moving them is a follow-up.
-- `B6` is next.
+- Plan `001` block `B6` (calendar API, actions, atomic registration) is
+  implemented; the record is in
+  `docs/plans/011-authorization-authentication-implementation-b6-plan.md`.
+  Registration and unregistration are database functions
+  (`public.register_for_training`, `public.unregister_from_training`): they hold
+  the capacity, start-time, and deadline rules, take the acting user from
+  `auth.uid()`, and lock the training row so capacity cannot be exceeded. Do not
+  reintroduce a read-then-write in TypeScript.
+- Registration actions return `ActionResult` instead of throwing for expected
+  failures, because production replaces a thrown message with an opaque digest.
+  New actions follow that shape.
+- `public.trainings` is no longer readable by `anon`, and `app/api/` no longer
+  exists.
+- Plan `001` block `B7` (auth flows) is implemented except for reading the
+  Supabase rate-limit configuration; the record is in
+  `docs/plans/012-authorization-authentication-implementation-b7-plan.md`.
+  Auth failure copy lives in `lib/auth/messages.ts` and must never reveal
+  whether an account exists. Redirect URLs come from `authCallbackUrl()` in
+  `lib/site-url.ts`; never interpolate `NEXT_PUBLIC_SITE_URL` directly.
+  The password rule lives once, in `services/validators/password.ts`.
+- Plan `001` block `B8`: the audit and regression half is done and recorded in
+  `docs/plans/013-authorization-authentication-implementation-b8-plan.md`. The
+  service-role key is absent from both bundles, no regular-user path is
+  privileged, and the full suite passes. Key rotation, the rate-limit reading,
+  and the production release are owner-only and remain open.
+- The production database is behind the code, and
+  `20260902073053_registration_rules.sql` must be applied there in two steps,
+  not one: its functions before the deploy, its anon revokes only after. The
+  deployed code still reads trainings as `anon`, so revoking first breaks the
+  live site. The procedure is in plan `013`.
 
 ## Deferred work registers
 
@@ -257,6 +290,9 @@ Consequences, which every production change must respect:
   do not open a separate translation pass unless asked.
 - A type or interface used by more than one module belongs in `lib/types.ts`,
   imported with `import type`. Do not redeclare the same shape in two files.
+- Type declarations carry no comments. A field list is already the
+  documentation; if a shape needs prose to be understood, the name is wrong or
+  the reason belongs where the type is used. `lib/types.ts` stays comment-free.
 - Runtime modules do not declare their own types. `lib/auth/dal.ts` imports
   `Session`, `SessionUser`, `RequestAuthorization`, `UserProfileRow`, and
   `AuthUserMetadata` from `lib/types.ts`.

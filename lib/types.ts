@@ -26,6 +26,26 @@ export interface UserProfileRow {
   role: unknown
 }
 
+export type ActionResult = { ok: true } | { ok: false; message: string }
+
+export const REGISTRATION_CODES = [
+  'ok',
+  'unauthenticated',
+  'not_found',
+  'past',
+  'already_registered',
+  'full',
+  'deadline_passed',
+  'not_registered',
+] as const
+
+export type RegistrationCode = (typeof REGISTRATION_CODES)[number]
+
+export interface ParticipantContact {
+  name: string
+  email: string | null
+}
+
 export interface UserJoin {
   fullName: string
   phoneNumber: string | null

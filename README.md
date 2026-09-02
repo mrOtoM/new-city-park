@@ -26,7 +26,8 @@ The app runs at [http://localhost:3000](http://localhost:3000).
 | `npm run dev`        | Development server (Turbopack)                              |
 | `npm run build`      | Production build                                            |
 | `npm start`          | Serve the production build                                  |
-| `npm test`           | Vitest unit suite over `tests/unit/`                        |
+| `npm test`           | Vitest unit suite over `tests/unit/`, no network             |
+| `npm run test:db`    | Integration suite over `tests/integration/` against the linked development Supabase project |
 | `npm run test:watch` | Vitest in watch mode                                        |
 | `npm run db:backup`  | Local data-only dump of the linked database into `backups/` |
 
@@ -47,7 +48,6 @@ removed. Tracked as `ENG-001` in `docs/04-engineering-quality-overview.md`.
 | ---------------------- | ------------------------------------------------------ |
 | `app/(public)/`        | Unauthenticated routes: login, register, password reset |
 | `app/(protected)/`     | Authenticated routes: calendar, trainings, profile      |
-| `app/api/`             | Route Handlers                                          |
 | `components/`          | Shared UI components                                    |
 | `lib/auth/`            | Auth DAL, roles, and capability contracts               |
 | `lib/supabase/`        | Supabase client boundaries                              |
@@ -55,6 +55,8 @@ removed. Tracked as `ENG-001` in `docs/04-engineering-quality-overview.md`.
 | `services/actions/`    | Writes (Server Actions)                                 |
 | `supabase/migrations/` | Database migrations                                     |
 | `tests/unit/`          | Unit tests                                              |
+| `tests/integration/`   | Database tests against development Supabase             |
+| `services/validators/` | Pure input validation                                   |
 | `docs/`                | Architecture, security, UI, and quality overviews       |
 
 ## Before you change anything

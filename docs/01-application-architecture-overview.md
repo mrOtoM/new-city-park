@@ -22,9 +22,10 @@ authorization behavior. Security rules live in
 The structure below is the approved target architecture. The structural
 migration defined by plan `003` is complete for blocks `B1`–`B3`, so the current
 source tree now reflects the approved route, component, and existing-library
-placement. Future security-owned modules such as `roles.ts`, `admin.ts`,
-`session.ts`, and generated database types remain governed by the security and
-database work that introduces their real behavior. `ARCH-004` is the one
+placement. `lib/auth/roles.ts` and `lib/supabase/admin.ts` now exist; `app/api/`
+does not, because `B6` removed its only route. `lib/supabase/session.ts` and
+generated database types remain governed by the work that would introduce their
+real behavior. `ARCH-004` is the one
 recorded architecture finding still requiring a separate product/route
 decision.
 
@@ -65,8 +66,6 @@ app/
 │   ├── statistics/
 │   └── trainings/
 │       └── _components/
-├── api/
-│   └── calendar/
 ├── auth/
 │   └── callback/
 ├── layout.tsx
@@ -195,10 +194,12 @@ single `emailLayout` shell so message chrome stays consistent.
 
 Implemented notifications:
 
-| Trigger                         | Function                        | Recipients              |
-| ------------------------------- | ------------------------------- | ----------------------- |
-| A user registers for a training | `sendTrainingRegistrationEmail` | the registering user    |
-| An admin deletes a training     | `sendTrainingCancelledEmails`   | all active participants |
+| Trigger                              | Function                          | Recipients              |
+| ------------------------------------ | --------------------------------- | ----------------------- |
+| A user registers for a training      | `sendTrainingRegistrationEmail`   | the registering user    |
+| A user unregisters themselves        | `sendTrainingUnregistrationEmail` | that user               |
+| An admin removes a participant       | `sendTrainingUnregistrationEmail` | the removed participant |
+| An admin deletes a training          | `sendTrainingCancelledEmails`     | all active participants |
 
 Invariants:
 
@@ -211,6 +212,11 @@ Invariants:
   development works without mail credentials.
 - Copy is Slovak; `EMAIL_FROM` sets the sender and falls back to a project
   default.
+- One function may serve two triggers when the message differs only in wording,
+  as `sendTrainingUnregistrationEmail` does: being removed by an organizer is
+  news to the recipient, while confirming their own action is not.
+- A recipient without an address is skipped, never an error: the notification
+  is a side effect of the operation, not part of it.
 
 Changing a training does not notify anyone, and there is no cancelled training
 state — deletion is the only cancellation path today.

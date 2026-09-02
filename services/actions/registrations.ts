@@ -4,15 +4,37 @@ import { revalidatePath } from 'next/cache'
 
 import { requireAdmin, requireUser } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
-import { sendTrainingRegistrationEmail } from '@/lib/email'
+import { sendTrainingRegistrationEmail, sendTrainingUnregistrationEmail } from '@/lib/email'
+import type { ActionResult, ParticipantContact, RegistrationCode } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
 import { getTraining } from '@/services/queries/trainings'
 import { registerForTraining, removeParticipantByAdmin, unregisterFromTraining } from '@/services/queries/registrations'
 
-export async function registerForTrainingAction(trainingId: number) {
-  const user = await requireUser()
+/** Every code the database can return, so a new one cannot be added silently. */
+const MESSAGES: Record<Exclude<RegistrationCode, 'ok'>, string> = {
+  unauthenticated: 'Prihlásenie vypršalo, prihlás sa znova',
+  not_found: 'Tréning sa nenašiel',
+  past: 'Tréning už prebehol',
+  already_registered: 'Už si prihlásený na tento tréning',
+  full: 'Tréning je už plne obsadený',
+  deadline_passed: 'Odhlásenie už nie je možné, termín prešiel',
+  not_registered: 'Na tento tréning nie si prihlásený',
+}
 
-  await registerForTraining(trainingId, user.id)
+function toResult(code: RegistrationCode): ActionResult {
+  return code === 'ok' ? { ok: true } : { ok: false, message: MESSAGES[code] }
+}
+
+function revalidateTrainingViews() {
+  revalidatePath('/calendar')
+  revalidatePath('/trainings')
+}
+
+export async function registerForTrainingAction(trainingId: number): Promise<ActionResult> {
+  const user = await requireUser()
+  const result = toResult(await registerForTraining(trainingId))
+
+  if (!result.ok) return result
 
   const training = await getTraining(trainingId)
 
@@ -31,23 +53,22 @@ export async function registerForTrainingAction(trainingId: number) {
     ).catch(console.error)
   }
 
-  revalidatePath('/calendar')
-  revalidatePath('/trainings')
+  revalidateTrainingViews()
+
+  return result
 }
 
-export async function unregisterFromTrainingAction(trainingId: number) {
+export async function unregisterFromTrainingAction(trainingId: number): Promise<ActionResult> {
   const user = await requireUser()
+  const result = toResult(await unregisterFromTraining(trainingId))
 
-  const training = await getTraining(trainingId)
+  if (!result.ok) return result
 
-  if (training?.unregisterDeadline && new Date() > new Date(String(training.unregisterDeadline))) {
-    throw new Error('Odhlásenie už nie je možné – deadline prešiel')
-  }
+  await notifyUnregistered(trainingId, { name: user.name, email: user.email })
 
-  await unregisterFromTraining(trainingId, user.id)
+  revalidateTrainingViews()
 
-  revalidatePath('/calendar')
-  revalidatePath('/trainings')
+  return result
 }
 
 export async function removeParticipantAction(trainingId: number, userId: string) {
@@ -57,9 +78,32 @@ export async function removeParticipantAction(trainingId: number, userId: string
   if (!userId) throw new Error('Neplatné ID účastníka')
 
   // The unregister deadline binds the participant only, not an admin.
-  await removeParticipantByAdmin(trainingId, userId)
+  const participant = await removeParticipantByAdmin(trainingId, userId)
+
+  await notifyUnregistered(trainingId, participant, { byAdmin: true })
 
   revalidatePath(`/trainings/${trainingId}/edit`)
-  revalidatePath('/calendar')
-  revalidatePath('/trainings')
+  revalidateTrainingViews()
+}
+
+/** Fire-and-forget, exactly like the registration mail: a failed send must not fail the action. */
+async function notifyUnregistered(
+  trainingId: number,
+  participant: ParticipantContact,
+  options: { byAdmin?: boolean } = {},
+) {
+  if (!participant.email) return
+
+  const training = await getTraining(trainingId)
+
+  if (!training) return
+
+  const typeLabel = TRAINING_TYPES.find((t) => t.value === training.type)?.label || 'Tréning'
+
+  sendTrainingUnregistrationEmail(
+    { name: participant.name || 'športovec', email: participant.email },
+    typeLabel,
+    formatDate(training.datetime, 'd. MMMM yyyy, HH:mm'),
+    options,
+  ).catch(console.error)
 }

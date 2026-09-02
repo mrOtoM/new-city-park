@@ -4,7 +4,9 @@ import Image from 'next/image'
 import bg6 from '@/public/bg6.png'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
+import { AUTH_MESSAGES } from '@/lib/auth/messages'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { validatePasswordPair } from '@/services/validators/password'
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 
@@ -19,13 +21,10 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError('')
 
-    if (password !== passwordConfirm) {
-      setError('Heslá sa nezhodujú')
-      return
-    }
+    const invalid = validatePasswordPair(password, passwordConfirm)
 
-    if (password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setError('Heslo musí mať aspoň 8 znakov, obsahovať malé písmeno, veľké písmeno a číslicu')
+    if (invalid) {
+      setError(invalid)
       return
     }
 
@@ -35,7 +34,7 @@ export default function ResetPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
-      setError('Nepodarilo sa zmeniť heslo. Skúste to znova.')
+      setError(AUTH_MESSAGES.passwordChangeFailed)
       setLoading(false)
       return
     }
