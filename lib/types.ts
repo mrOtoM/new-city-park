@@ -47,6 +47,12 @@ export const REGISTRATION_CODES = [
 
 export type RegistrationCode = (typeof REGISTRATION_CODES)[number]
 
+/** Just enough to notify someone; never widen this into a profile DTO. */
+export interface ParticipantContact {
+  name: string
+  email: string | null
+}
+
 export interface UserJoin {
   fullName: string
   phoneNumber: string | null

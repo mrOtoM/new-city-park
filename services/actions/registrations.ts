@@ -4,8 +4,8 @@ import { revalidatePath } from 'next/cache'
 
 import { requireAdmin, requireUser } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
-import { sendTrainingRegistrationEmail } from '@/lib/email'
-import type { ActionResult, RegistrationCode } from '@/lib/types'
+import { sendTrainingRegistrationEmail, sendTrainingUnregistrationEmail } from '@/lib/email'
+import type { ActionResult, ParticipantContact, RegistrationCode } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
 import { getTraining } from '@/services/queries/trainings'
 import { registerForTraining, removeParticipantByAdmin, unregisterFromTraining } from '@/services/queries/registrations'
@@ -59,11 +59,14 @@ export async function registerForTrainingAction(trainingId: number): Promise<Act
 }
 
 export async function unregisterFromTrainingAction(trainingId: number): Promise<ActionResult> {
-  await requireUser()
-
+  const user = await requireUser()
   const result = toResult(await unregisterFromTraining(trainingId))
 
-  if (result.ok) revalidateTrainingViews()
+  if (!result.ok) return result
+
+  await notifyUnregistered(trainingId, { name: user.name, email: user.email })
+
+  revalidateTrainingViews()
 
   return result
 }
@@ -75,8 +78,32 @@ export async function removeParticipantAction(trainingId: number, userId: string
   if (!userId) throw new Error('Neplatné ID účastníka')
 
   // The unregister deadline binds the participant only, not an admin.
-  await removeParticipantByAdmin(trainingId, userId)
+  const participant = await removeParticipantByAdmin(trainingId, userId)
+
+  await notifyUnregistered(trainingId, participant, { byAdmin: true })
 
   revalidatePath(`/trainings/${trainingId}/edit`)
   revalidateTrainingViews()
+}
+
+/** Fire-and-forget, exactly like the registration mail: a failed send must not fail the action. */
+async function notifyUnregistered(
+  trainingId: number,
+  participant: ParticipantContact,
+  options: { byAdmin?: boolean } = {},
+) {
+  if (!participant.email) return
+
+  const training = await getTraining(trainingId)
+
+  if (!training) return
+
+  const typeLabel = TRAINING_TYPES.find((t) => t.value === training.type)?.label || 'Tréning'
+
+  sendTrainingUnregistrationEmail(
+    { name: participant.name || 'športovec', email: participant.email },
+    typeLabel,
+    formatDate(training.datetime, 'd. MMMM yyyy, HH:mm'),
+    options,
+  ).catch(console.error)
 }
