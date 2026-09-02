@@ -1,7 +1,8 @@
 # New City Park
 
 Training calendar and registration application. Members browse and register for
-trainings; administrators manage trainings, participants, and statistics.
+trainings; administrators manage trainings and participants, and the owner
+sees the statistics and the list of registered accounts.
 User-facing copy is Slovak.
 
 ## Quick start
@@ -47,7 +48,7 @@ removed. Tracked as `ENG-001` in `docs/04-engineering-quality-overview.md`.
 | Directory              | Purpose                                                |
 | ---------------------- | ------------------------------------------------------ |
 | `app/(public)/`        | Unauthenticated routes: login, register, password reset |
-| `app/(protected)/`     | Authenticated routes: calendar, trainings, profile      |
+| `app/(protected)/`     | Authenticated routes: calendar, trainings, statistics, users, profile |
 | `components/`          | Shared UI components                                    |
 | `lib/auth/`            | Auth DAL, roles, and capability contracts               |
 | `lib/supabase/`        | Supabase client boundaries                              |

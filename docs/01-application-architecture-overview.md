@@ -64,7 +64,9 @@ app/
 │   ├── profile/
 │   │   └── _components/
 │   ├── statistics/
-│   └── trainings/
+│   ├── trainings/
+│   │   └── _components/
+│   └── users/
 │       └── _components/
 ├── auth/
 │   └── callback/
