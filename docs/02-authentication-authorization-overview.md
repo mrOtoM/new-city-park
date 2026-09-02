@@ -52,8 +52,8 @@ comparisons throughout the application.
 | Role    | Approved capability boundary                                                                       |
 | ------- | -------------------------------------------------------------------------------------------------- |
 | `user`  | Own profile, own registrations, and authenticated training/calendar access                         |
-| `admin` | All user capabilities plus training management and participant data; no statistics                 |
-| `owner` | All admin capabilities plus statistics and explicitly approved owner-only security operations      |
+| `admin` | All user capabilities plus training management and participant data; no statistics or account list |
+| `owner` | All admin capabilities plus statistics, the registered-account list, and explicitly approved owner-only security operations |
 
 No role has an application capability to assign roles.
 
@@ -192,8 +192,9 @@ protect themselves; a check in the calling page alone is not sufficient.
 - `(protected)` is an organizational route group, not a security primitive.
 - The protected shell may require a user, but sensitive pages still perform
   their own capability checks close to data access.
-- `statistics` and training-management views require an admin capability;
-  `owner` inherits that capability.
+- Training-management views require an admin capability; `owner` inherits it.
+- `statistics` and `users` are owner-only: they require `statistics:view` and
+  `users:view`, which no `admin` holds.
 - A regular user must not receive participant PII, statistics, or management
   DTO fields merely because the UI hides the corresponding control.
 

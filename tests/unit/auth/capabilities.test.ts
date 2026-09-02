@@ -19,6 +19,7 @@ const MATRIX: Record<Capability, Record<Role, boolean>> = {
   'training:manage': { user: false, admin: true, owner: true },
   'participants:view': { user: false, admin: true, owner: true },
   'statistics:view': { user: false, admin: false, owner: true },
+  'users:view': { user: false, admin: false, owner: true },
   'security:break-glass': { user: false, admin: false, owner: true },
   'role:assign': { user: false, admin: false, owner: false },
 }
