@@ -168,7 +168,7 @@ become the authority that grants access.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `lib/supabase/browser.ts` | Browser-only publishable/legacy anon client for auth and RLS-protected browser operations                                      |
 | `lib/supabase/server.ts`  | Cookie-bound SSR client for authenticated Server Components, Server Actions, Route Handlers, DAL, and regular-user data access |
-| `lib/supabase/session.ts` | Session refresh used by `proxy.ts`; it does not grant application capabilities                                                 |
+| `lib/supabase/session.ts` | Session refresh used by `proxy.ts`; it does not grant application capabilities. Not extracted yet: `proxy.ts` still builds this client inline |
 | `lib/supabase/admin.ts`   | `server-only` privileged client for explicitly approved admin/owner/system operations after an appropriate check               |
 
 The privileged client must fail closed when its secret is missing. It must
@@ -219,8 +219,9 @@ out of the response and logs.
 - Authenticated requests without the required capability return `403`.
 - API boundaries return minimum explicit DTOs, never unrestricted
   `select('*')` results.
-- `/api/calendar` is authenticated unless a separately reviewed public
-  calendar contract is intentionally introduced.
+- The application currently has no Route Handler under `app/api/`. `B6`
+  deleted `/api/calendar`, which returned every training to anyone and had no
+  caller. A new one requires the rules above and a named consumer.
 - Redirect responses are for browser navigation; APIs use status codes and
   typed response bodies.
 
