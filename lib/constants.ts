@@ -1,4 +1,4 @@
-import { Dumbbell, Footprints, Heart, RotateCcw, Timer, Zap } from 'lucide-react'
+import { Activity, Dumbbell, Footprints, Heart, RotateCcw, Timer, Zap } from 'lucide-react'
 
 export const TRAINING_TYPES = [
   { value: 'STRENGTH', label: 'Silový tréning', icon: Dumbbell },
@@ -7,6 +7,7 @@ export const TRAINING_TYPES = [
   { value: 'CIRCLE', label: 'Kruhový tréning', icon: RotateCcw },
   { value: 'TABATA', label: 'Tabata tréning', icon: Timer },
   { value: 'POWER_JUMP', label: 'Power Jump', icon: Zap },
+  { value: 'BODY_STRENGTH', label: 'Body Strength', icon: Activity },
 ] as const
 
 export type TrainingType = (typeof TRAINING_TYPES)[number]['value']
