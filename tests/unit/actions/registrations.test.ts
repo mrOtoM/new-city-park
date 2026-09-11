@@ -4,7 +4,10 @@ import { REGISTRATION_CODES, type RegistrationCode } from '@/lib/types'
 
 const registerForTraining = vi.fn()
 const unregisterFromTraining = vi.fn()
+const joinTrainingWaitlist = vi.fn()
+const leaveTrainingWaitlist = vi.fn()
 const removeParticipantByAdmin = vi.fn()
+const notifyWaitlist = vi.fn(async (..._args: unknown[]) => undefined)
 const sendTrainingUnregistrationEmail = vi.fn(async (..._args: unknown[]) => undefined)
 const training = { id: 1, type: 'kondicny', datetime: '2030-01-01T18:00:00', unregisterDeadline: null }
 
@@ -18,9 +21,12 @@ vi.mock('@/lib/email', () => ({
   sendTrainingUnregistrationEmail,
 }))
 vi.mock('@/services/queries/trainings', () => ({ getTraining: async () => training }))
+vi.mock('@/services/actions/waitlist-notifications', () => ({ notifyWaitlist }))
 vi.mock('@/services/queries/registrations', () => ({
   registerForTraining,
   unregisterFromTraining,
+  joinTrainingWaitlist,
+  leaveTrainingWaitlist,
   removeParticipantByAdmin,
 }))
 
@@ -35,6 +41,8 @@ beforeEach(() => {
   vi.resetModules()
   registerForTraining.mockReset()
   unregisterFromTraining.mockReset()
+  joinTrainingWaitlist.mockReset()
+  leaveTrainingWaitlist.mockReset()
   removeParticipantByAdmin.mockReset()
 })
 
@@ -132,5 +140,68 @@ describe('e-mail o odhlásení', () => {
 
     await expect(removeParticipantAction(1, 'u3')).resolves.toBeUndefined()
     expect(sendTrainingUnregistrationEmail).not.toHaveBeenCalled()
+  })
+})
+
+describe('náhradníci', () => {
+  it.each(['joinWaitlistAction', 'leaveWaitlistAction'] as const)('%s: kód ok je úspech a revaliduje', async (name) => {
+    joinTrainingWaitlist.mockResolvedValue('ok')
+    leaveTrainingWaitlist.mockResolvedValue('ok')
+    const { revalidatePath } = await import('next/cache')
+    const actions = await importActions()
+
+    expect(await actions[name](1)).toEqual({ ok: true })
+    expect(revalidatePath).toHaveBeenCalled()
+  })
+
+  it.each(['not_full', 'already_waitlisted', 'waitlist_full', 'past'] as const)(
+    'zapísanie s kódom %s vráti správu a nerevaliduje',
+    async (code) => {
+      joinTrainingWaitlist.mockResolvedValue(code)
+      const { revalidatePath } = await import('next/cache')
+      const { joinWaitlistAction } = await importActions()
+
+      const result = await joinWaitlistAction(1)
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.message.length).toBeGreaterThan(3)
+      expect(revalidatePath).not.toHaveBeenCalled()
+    },
+  )
+
+  it('zapísanie ako náhradník neposiela e-mail', async () => {
+    joinTrainingWaitlist.mockResolvedValue('ok')
+    const { joinWaitlistAction } = await importActions()
+
+    await joinWaitlistAction(1)
+
+    expect(notifyWaitlist).not.toHaveBeenCalled()
+  })
+
+  it('úspešné odhlásenie upozorní náhradníkov', async () => {
+    unregisterFromTraining.mockResolvedValue('ok')
+    const { unregisterFromTrainingAction } = await importActions()
+
+    await unregisterFromTrainingAction(7)
+
+    expect(notifyWaitlist).toHaveBeenCalledWith(7)
+  })
+
+  it('neúspešné odhlásenie náhradníkov neupozorní', async () => {
+    unregisterFromTraining.mockResolvedValue('deadline_passed')
+    const { unregisterFromTrainingAction } = await importActions()
+
+    await unregisterFromTrainingAction(7)
+
+    expect(notifyWaitlist).not.toHaveBeenCalled()
+  })
+
+  it('odobratie adminom upozorní náhradníkov', async () => {
+    removeParticipantByAdmin.mockResolvedValue({ name: 'Jana', email: 'jana@example.test' })
+    const { removeParticipantAction } = await importActions()
+
+    await removeParticipantAction(7, 'u2')
+
+    expect(notifyWaitlist).toHaveBeenCalledWith(7)
   })
 })

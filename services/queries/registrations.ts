@@ -5,8 +5,10 @@ import {
   REGISTRATION_CODES,
   type ParticipantContact,
   type RegistrationCode,
+  type TrainingOccupancy,
   type TrainingParticipants,
   type UserJoin,
+  type WaitlistRecipient,
 } from '@/lib/types'
 
 function parseUserJoin(users: unknown): UserJoin | null {
@@ -44,6 +46,38 @@ export function registerForTraining(trainingId: number): Promise<RegistrationCod
 
 export function unregisterFromTraining(trainingId: number): Promise<RegistrationCode> {
   return callRegistrationFunction('unregister_from_training', trainingId)
+}
+
+export function joinTrainingWaitlist(trainingId: number): Promise<RegistrationCode> {
+  return callRegistrationFunction('join_training_waitlist', trainingId)
+}
+
+export function leaveTrainingWaitlist(trainingId: number): Promise<RegistrationCode> {
+  return callRegistrationFunction('leave_training_waitlist', trainingId)
+}
+
+/**
+ * Returns other users' e-mails, so it is the one privileged read on a
+ * regular-user path. The database function is executable by service_role
+ * only, and it marks the rows it returns, so a second call while the spot is
+ * still open returns nothing. Approved as a system operation in
+ * docs/02-authentication-authorization-overview.md: the caller must have
+ * completed its own write first and must never return the rows to the client.
+ */
+export async function claimWaitlistNotifications(trainingId: number): Promise<WaitlistRecipient[]> {
+  const supabaseAdmin = createSupabaseAdminClient()
+
+  const { data, error } = await supabaseAdmin.rpc('claim_waitlist_notifications', { p_training_id: trainingId })
+
+  if (error) {
+    console.error(error)
+    return []
+  }
+
+  return ((data ?? []) as { name: string | null; email: string }[]).map((row) => ({
+    name: row.name || 'športovec',
+    email: row.email,
+  }))
 }
 
 /**
@@ -86,15 +120,22 @@ export async function getTrainingParticipants(trainingId: number): Promise<Train
 
   const supabaseAdmin = createSupabaseAdminClient()
 
-  const { data, error } = await supabaseAdmin
-    .from('training_registrations')
-    .select('registered_at, cancelled_at, user_id, users:user_id("fullName", "phoneNumber", email)')
-    .eq('training_id', trainingId)
-    .order('registered_at', { ascending: true })
+  const [{ data, error }, waitlistResult] = await Promise.all([
+    supabaseAdmin
+      .from('training_registrations')
+      .select('registered_at, cancelled_at, user_id, users:user_id("fullName", "phoneNumber", email)')
+      .eq('training_id', trainingId)
+      .order('registered_at', { ascending: true }),
+    supabaseAdmin
+      .from('training_waitlist')
+      .select('joined_at, notified_at, user_id, users:user_id("fullName", "phoneNumber", email)')
+      .eq('training_id', trainingId)
+      .order('joined_at', { ascending: true }),
+  ])
 
-  if (error) {
-    console.error(error)
-    return { active: [], cancelled: [] }
+  if (error || waitlistResult.error) {
+    console.error(error ?? waitlistResult.error)
+    return { active: [], cancelled: [], waitlist: [] }
   }
 
   const active = data
@@ -123,21 +164,40 @@ export async function getTrainingParticipants(trainingId: number): Promise<Train
       }
     })
 
-  return { active, cancelled }
+  const waitlist = waitlistResult.data.map((w) => {
+    const user = parseUserJoin(w.users)
+    return {
+      userId: w.user_id,
+      name: user?.fullName || 'Neznámy',
+      phone: user?.phoneNumber || '–',
+      email: user?.email || '–',
+      joinedAt: w.joined_at,
+      notifiedAt: w.notified_at,
+    }
+  })
+
+  return { active, cancelled, waitlist }
 }
 
-export async function getRegistrationCounts(): Promise<Record<number, number>> {
+export async function getTrainingOccupancy(): Promise<Record<number, TrainingOccupancy>> {
   const supabase = await createSupabaseServerClient()
 
-  const { data, error } = await supabase.from('training_capacity').select('training_id, active_count')
+  const { data, error } = await supabase
+    .from('training_capacity')
+    .select('training_id, max_participants, active_count, waitlist_count, waitlist_max')
 
   if (error) return {}
 
-  const counts: Record<number, number> = {}
+  const occupancy: Record<number, TrainingOccupancy> = {}
   for (const row of data) {
-    counts[row.training_id] = row.active_count
+    occupancy[row.training_id] = {
+      active: row.active_count,
+      max: row.max_participants,
+      waitlist: row.waitlist_count,
+      waitlistMax: row.waitlist_max,
+    }
   }
-  return counts
+  return occupancy
 }
 
 export async function getUserRegistrations(userId: string) {
@@ -151,4 +211,13 @@ export async function getUserRegistrations(userId: string) {
 
   if (error) return []
   return data.map((r) => r.training_id)
+}
+
+export async function getUserWaitlist(userId: string) {
+  const supabase = await createSupabaseServerClient()
+
+  const { data, error } = await supabase.from('training_waitlist').select('training_id').eq('user_id', userId)
+
+  if (error) return []
+  return data.map((w) => w.training_id)
 }

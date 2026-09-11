@@ -1,7 +1,7 @@
 import TrainingList from '@/components/trainings/TrainingList'
 import Button from '@/components/ui/Button'
 import { getTrainings } from '@/services/queries/trainings'
-import { getUserRegistrations, getRegistrationCounts } from '@/services/queries/registrations'
+import { getTrainingOccupancy, getUserRegistrations, getUserWaitlist } from '@/services/queries/registrations'
 import { requireUser } from '@/lib/auth/dal'
 import { hasAdminCapabilities } from '@/lib/auth/roles'
 import { Plus } from 'lucide-react'
@@ -21,13 +21,18 @@ export default async function TrainingsPage() {
     .filter((t) => new Date(t.datetime) >= now)
     .sort((a, b) => a.datetime.localeCompare(b.datetime))
 
-  const [userRegistrations, registrationCounts] = await Promise.all([
+  const [userRegistrations, userWaitlist, occupancy] = await Promise.all([
     getUserRegistrations(user.id),
-    getRegistrationCounts(),
+    getUserWaitlist(user.id),
+    getTrainingOccupancy(),
   ])
 
-  // Server filtruje pre správny prvý render; klient rovnaké pravidlo drží optimisticky.
-  const visibleTrainings = isAdmin ? currentTrainings : currentTrainings.filter((t) => userRegistrations.includes(t.id))
+  // The server filters for a correct first render; the client mirrors the same
+  // rule optimistically through `onlyRegistered`. Waitlisted trainings count as
+  // "mine" so the person can leave the waitlist from here.
+  const visibleTrainings = isAdmin
+    ? currentTrainings
+    : currentTrainings.filter((t) => userRegistrations.includes(t.id) || userWaitlist.includes(t.id))
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -44,7 +49,8 @@ export default async function TrainingsPage() {
         showAll
         onlyRegistered={!isAdmin}
         userRegistrations={userRegistrations}
-        registrationCounts={registrationCounts}
+        occupancy={occupancy}
+        userWaitlist={userWaitlist}
       />
     </div>
   )

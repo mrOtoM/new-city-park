@@ -202,11 +202,15 @@ Implemented notifications:
 | A user unregisters themselves        | `sendTrainingUnregistrationEmail` | that user               |
 | An admin removes a participant       | `sendTrainingUnregistrationEmail` | the removed participant |
 | An admin deletes a training          | `sendTrainingCancelledEmails`     | all active participants |
+| A spot opens on a full training      | `sendWaitlistSpotOpenedEmails`    | every waitlisted person not yet told about this opening |
 
 Invariants:
 
 - Only `services/actions/` triggers an email, after the database write has
-  succeeded; queries and UI components must not send mail.
+  succeeded; queries and UI components must not send mail. A helper that
+  several actions share, such as `services/actions/waitlist-notifications.ts`,
+  lives in the same directory but carries no `'use server'`, so it is not
+  itself a callable action.
 - Sending is fire-and-forget and its failure never fails the user operation, as
   required by the retry rules in the engineering-quality overview.
 - All interpolated values are HTML-escaped before they reach a template.
@@ -220,8 +224,10 @@ Invariants:
 - A recipient without an address is skipped, never an error: the notification
   is a side effect of the operation, not part of it.
 
-Changing a training does not notify anyone, and there is no cancelled training
-state — deletion is the only cancellation path today.
+Changing a training notifies nobody about the change itself; it only runs the
+waitlist check, because a raised capacity opens a spot. There is no cancelled
+training state — deletion is the only cancellation path today, and it does
+not notify waitlisted people (plan `014`, future work).
 
 ### `services/`
 

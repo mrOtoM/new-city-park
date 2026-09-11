@@ -37,6 +37,10 @@ export const REGISTRATION_CODES = [
   'full',
   'deadline_passed',
   'not_registered',
+  'not_full',
+  'already_waitlisted',
+  'waitlist_full',
+  'not_waitlisted',
 ] as const
 
 export type RegistrationCode = (typeof REGISTRATION_CODES)[number]
@@ -44,6 +48,18 @@ export type RegistrationCode = (typeof REGISTRATION_CODES)[number]
 export interface ParticipantContact {
   name: string
   email: string | null
+}
+
+export interface TrainingOccupancy {
+  active: number
+  max: number | null
+  waitlist: number
+  waitlistMax: number
+}
+
+export interface WaitlistRecipient {
+  name: string
+  email: string
 }
 
 export interface UserJoin {
@@ -111,7 +127,17 @@ export interface CancelledParticipant {
   cancelledAt: string
 }
 
+export interface WaitlistedParticipant {
+  userId: string
+  name: string
+  phone: string
+  email: string
+  joinedAt: string
+  notifiedAt: string | null
+}
+
 export interface TrainingParticipants {
   active: ActiveParticipant[]
   cancelled: CancelledParticipant[]
+  waitlist: WaitlistedParticipant[]
 }

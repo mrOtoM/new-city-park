@@ -2,7 +2,7 @@ import TrainingEditTabs from '@/app/(protected)/trainings/[id]/edit/_components/
 import { updateTrainingAction } from '@/services/actions/trainings'
 import { removeParticipantAction } from '@/services/actions/registrations'
 import { getTraining } from '@/services/queries/trainings'
-import { getTrainingParticipants } from '@/services/queries/registrations'
+import { getTrainingOccupancy, getTrainingParticipants } from '@/services/queries/registrations'
 import { requireAdmin } from '@/lib/auth/dal'
 import { notFound } from 'next/navigation'
 
@@ -10,7 +10,12 @@ export default async function EditTrainingPage({ params }: { params: Promise<{ i
   await requireAdmin()
 
   const { id } = await params
-  const [training, participants] = await Promise.all([getTraining(Number(id)), getTrainingParticipants(Number(id))])
+  const trainingId = Number(id)
+  const [training, participants, occupancy] = await Promise.all([
+    getTraining(trainingId),
+    getTrainingParticipants(trainingId),
+    getTrainingOccupancy(),
+  ])
 
   if (!training) {
     notFound()
@@ -21,6 +26,7 @@ export default async function EditTrainingPage({ params }: { params: Promise<{ i
       training={training}
       action={updateTrainingAction}
       participants={participants}
+      waitlistMax={occupancy[trainingId]?.waitlistMax}
       onRemoveParticipant={removeParticipantAction}
     />
   )

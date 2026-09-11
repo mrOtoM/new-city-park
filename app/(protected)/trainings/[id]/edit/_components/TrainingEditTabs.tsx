@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Phone, UserMinus } from 'lucide-react'
+import { Clock, Phone, UserMinus } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import type { ActiveParticipant, TrainingParticipants } from '@/lib/types'
 import TrainingForm from '@/app/(protected)/trainings/_components/TrainingForm'
@@ -19,6 +19,7 @@ interface TrainingEditTabsProps {
   }
   action: (formData: FormData) => void
   participants: TrainingParticipants
+  waitlistMax?: number
   onRemoveParticipant?: (trainingId: number, userId: string) => Promise<void>
 }
 
@@ -26,6 +27,7 @@ export default function TrainingEditTabs({
   training,
   action,
   participants,
+  waitlistMax,
   onRemoveParticipant,
 }: TrainingEditTabsProps) {
   const [activeTab, setActiveTab] = useState<'info' | 'participants'>('info')
@@ -85,7 +87,9 @@ export default function TrainingEditTabs({
         <div className="mx-auto max-w-6xl space-y-6 p-4">
           {removeError && <p className="text-sm text-red-400">{removeError}</p>}
 
-          {participants.active.length === 0 && participants.cancelled.length === 0 ? (
+          {participants.active.length === 0 &&
+          participants.cancelled.length === 0 &&
+          participants.waitlist.length === 0 ? (
             <p className="text-primary-400 py-8 text-center">Zatiaľ nikto prihlásený</p>
           ) : (
             <>
@@ -126,6 +130,40 @@ export default function TrainingEditTabs({
                     </li>
                   ))}
                 </ul>
+              )}
+
+              {participants.waitlist.length > 0 && (
+                <div>
+                  <h3 className="text-primary-400 mb-2 text-sm font-medium">
+                    Náhradníci ({participants.waitlist.length}
+                    {waitlistMax ? ` / ${waitlistMax}` : ''})
+                  </h3>
+                  <ul className="space-y-2">
+                    {participants.waitlist.map((p) => (
+                      <li key={p.userId} className="bg-primary-900/50 flex items-center justify-between rounded-lg p-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-primary-50 font-medium">{p.name}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span className="text-primary-400 flex items-center gap-1 text-xs">
+                              <Phone className="h-3 w-3" />
+                              {p.phone}
+                            </span>
+                            <span className="text-primary-400 text-xs">{p.email}</span>
+                            <span className="text-primary-500 text-xs">
+                              čaká od {formatDate(p.joinedAt, 'd. MMMM, HH:mm')}
+                            </span>
+                            {p.notifiedAt && (
+                              <span className="text-accent-teal text-xs">
+                                upozornený {formatDate(p.notifiedAt, 'd. MMMM, HH:mm')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Clock className="text-primary-500 ml-3 h-4 w-4 shrink-0" aria-hidden="true" />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
 
               {participants.cancelled.length > 0 && (

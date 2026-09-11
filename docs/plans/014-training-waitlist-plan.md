@@ -156,8 +156,11 @@ spot stays open send one mail, not two. `register_for_training` resets
 `notified_at` to `NULL` for the whole waitlist when its insert makes the
 training full again, so the next opening notifies again.
 
-The TypeScript side is a single helper in `services/actions/registrations.ts`
-(`notifyWaitlist(trainingId)`), which calls the function through
+The TypeScript side is a single helper, `notifyWaitlist(trainingId)` in
+`services/actions/waitlist-notifications.ts` — a `server-only` module with
+no `'use server'`, because an exported function in a `'use server'` file is a
+public Server Action and this one has no guard of its own. It calls the
+database function through
 `createSupabaseAdminClient()`, passes the rows to `lib/email.ts`, and never
 returns them. It runs only after `requireUser()`/`requireAdmin()` and only
 when the preceding write returned `ok`. The recipients are not the acting
@@ -377,35 +380,35 @@ získa ten, kto sa prihlási prvý.*
 
 Development first; each step verified before the next.
 
-- [ ] **Decisions 1–3** confirmed by the owner and recorded in this file.
-- [ ] **Migration** `supabase/migrations/<timestamp>_training_waitlist.sql`
+- [x] **Decisions 1–3** confirmed by the owner and recorded in this file.
+- [x] **Migration** `supabase/migrations/<timestamp>_training_waitlist.sql`
       (created with `npx supabase migration new training_waitlist`): table +
       RLS + grants, `waitlist_capacity()`, view with `waitlist_count` /
       `waitlist_max`, `join_training_waitlist`, `leave_training_waitlist`,
       `claim_waitlist_notifications`, replaced `register_for_training`, function
       grants/revokes. Safe to re-run. Style per `20260214140608_initial_setup.sql`.
-- [ ] `npx supabase db push` against the **development** project after
+- [x] `npx supabase db push` against the **development** project after
       verifying the linked ref.
-- [ ] **Types** in `lib/types.ts` (codes, `TrainingOccupancy`,
+- [x] **Types** in `lib/types.ts` (codes, `TrainingOccupancy`,
       `WaitlistRecipient`). No comments in the file.
-- [ ] **Queries** in `services/queries/registrations.ts`; replace
+- [x] **Queries** in `services/queries/registrations.ts`; replace
       `getRegistrationCounts` with `getTrainingOccupancy` and update both
       pages; `getTrainingParticipants` returns `waitlist`.
-- [ ] **Actions**: `joinWaitlistAction`, `leaveWaitlistAction`,
+- [x] **Actions**: `joinWaitlistAction`, `leaveWaitlistAction`,
       `notifyWaitlist`, wired into user unregister, admin removal, and
       training update.
-- [ ] **E-mail** `sendWaitlistSpotOpenedEmails` in `lib/email.ts`.
-- [ ] **UI** in `TrainingList.tsx`: waitlist optimistic state, three button
+- [x] **E-mail** `sendWaitlistSpotOpenedEmails` in `lib/email.ts`.
+- [x] **UI** in `TrainingList.tsx`: waitlist optimistic state, three button
       states, note, `ConfirmSheet` for leaving; `/trainings` includes
       waitlisted trainings for regular users (Decision 3).
-- [ ] **Admin UI** in `TrainingEditTabs.tsx`: `Náhradníci (n / max)` section
+- [x] **Admin UI** in `TrainingEditTabs.tsx`: `Náhradníci (n / max)` section
       with the `upozornený` tag; the edit page passes `waitlistMax` from
       `getTrainingOccupancy`.
-- [ ] **Unit tests** (`tests/unit/actions/registrations.test.ts`): every new
+- [x] **Unit tests** (`tests/unit/actions/registrations.test.ts`): every new
       code has a message and does not throw; `notifyWaitlist` runs after
       `ok` and not after a failure; recipients go to the e-mail module and
       never into the `ActionResult`.
-- [ ] **Integration tests** (`tests/integration/waitlist.test.ts`, against
+- [x] **Integration tests** (`tests/integration/waitlist.test.ts`, against
       development only):
       1. join on a training with a free spot → `not_full`;
       2. join on a full training → `ok`; view shows `waitlist_count = 1`;
@@ -423,12 +426,50 @@ Development first; each step verified before the next.
       9. leave → `ok`, leave again → `not_waitlisted`;
       10. `getTrainingParticipants` returns the waitlist with `notifiedAt`
           for an admin and is refused for a regular user, as today.
-- [ ] **Docs**: overview `02` gains the approved privileged system read with
+- [x] **Docs**: overview `02` gains the approved privileged system read with
       its justification; overview `01` lists the new table and functions;
       `AGENTS.md` baseline gets one bullet; `.env.example` unchanged.
-- [ ] `npm test`, `npm run test:db`, `npm run build`, manual pass in the
-      browser with Resend configured in development.
+- [x] `npm test`, `npm run test:db`, `npm run build` — green, see the record.
+- [ ] Manual pass in the browser with Resend configured in development
+      (owner; the agent does not sign in with a password).
 - [ ] Merge the feature branch into `development`.
+
+## Implementation record
+
+Implemented on 2026-09-11 on branch `feature/training-waitlist`, migration
+`20260911075500_training_waitlist.sql` applied to the development project
+`bqefyxloqktstljbzbgu` with `npx supabase db push`.
+
+Deviations from the approach above, all small:
+
+- `notifyWaitlist` lives in `services/actions/waitlist-notifications.ts`, not
+  in `registrations.ts`, for the reason given under Decision 1.
+- `getTrainingOccupancy` replaced `getRegistrationCounts` outright; the
+  edit page reads it too, for `waitlistMax`.
+- The unregister and leave-waitlist confirmations share one `ConfirmSheet`
+  with a `kind` discriminator instead of a second sheet.
+
+Verified:
+
+- `npx tsc --noEmit`: clean.
+- `npm test`: 11 files, 230 tests, green — including 10 new cases in
+  `tests/unit/actions/registrations.test.ts` (new codes have messages and do
+  not throw; `notifyWaitlist` runs after `ok` on unregister and admin
+  removal, never after a failure or after a join) and 4 in
+  `tests/unit/actions/waitlist-notifications.test.ts` (no recipients → no
+  mail and no training read; recipients go to `lib/email.ts` and are never
+  returned; a send failure does not throw).
+- `npm run test:db`: 6 files, 61 tests, green — 18 new in
+  `tests/integration/waitlist.test.ts` covering every case listed under
+  Tasks, plus `not_found`, `past`, `not_full` on an unlimited training, a
+  direct `INSERT` by a user (`42501`), and a past training returning no
+  recipients.
+- `npm run build`: green.
+
+Not verified: the rendered UI and a real Resend delivery. Lint was not run:
+`npm run lint` is broken independently of this branch (`ENG-001`). Prettier
+was checked on every changed file with `--end-of-line auto`, because the
+working copy is CRLF and a plain `--check` flags every file in the repository.
 
 ### Deployment and rollback
 

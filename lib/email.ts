@@ -1,5 +1,8 @@
 import { Resend } from 'resend'
 
+import { siteOrigin } from '@/lib/site-url'
+import type { WaitlistRecipient } from '@/lib/types'
+
 // Built on first send. `new Resend(undefined)` throws, and at module level that
 // would break the build and every import in an environment without the key.
 let client: Resend | null = null
@@ -160,5 +163,54 @@ export async function sendTrainingCancelledEmails(
   const failed = results.filter((r) => r.status === 'rejected')
   if (failed.length > 0) {
     console.error(`Failed to send ${failed.length}/${participants.length} cancellation emails`)
+  }
+}
+
+/**
+ * The waitlist reserves nothing: everyone on it gets the same message at the
+ * same time and the first to register wins, which is why the copy says so.
+ */
+export async function sendWaitlistSpotOpenedEmails(
+  recipients: WaitlistRecipient[],
+  trainingLabel: string,
+  trainingDatetime: string,
+) {
+  const resend = resendClient()
+
+  if (!resend || recipients.length === 0) return
+
+  const calendarUrl = new URL('/calendar', siteOrigin()).toString()
+  const safeLabel = escapeHtml(trainingLabel)
+  const safeDatetime = escapeHtml(trainingDatetime)
+
+  const results = await Promise.allSettled(
+    recipients.map(async (recipient) => {
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: recipient.email,
+        subject: `Uvoľnilo sa miesto – ${trainingLabel}`,
+        html: emailLayout(
+          'Uvoľnilo sa miesto na tréningu',
+          `
+            <p>Ahoj ${escapeHtml(recipient.name)},</p>
+            <p>
+              na tréningu <strong>${safeLabel}</strong>, ktorý sa koná
+              <strong>${safeDatetime}</strong>, sa uvoľnilo miesto.
+            </p>
+            <p>
+              Prihlásiť sa môžeš v <a href="${calendarUrl}">kalendári</a>. Miesto nie je
+              rezervované – získa ho ten, kto sa prihlási prvý.
+            </p>
+          `,
+        ),
+      })
+      if (error) throw error
+      return data
+    }),
+  )
+
+  const failed = results.filter((r) => r.status === 'rejected')
+  if (failed.length > 0) {
+    console.error(`Failed to send ${failed.length}/${recipients.length} waitlist emails`)
   }
 }

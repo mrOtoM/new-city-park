@@ -8,6 +8,7 @@ import { requireAdmin } from '@/lib/auth/dal'
 import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingCancelledEmails } from '@/lib/email'
 import { buildDeadlineISO, computeDeadlineFromTraining, formatDate } from '@/lib/utils'
+import { notifyWaitlist } from '@/services/actions/waitlist-notifications'
 import { getTraining } from '@/services/queries/trainings'
 import { getTrainingParticipants } from '@/services/queries/registrations'
 
@@ -64,6 +65,9 @@ export async function updateTrainingAction(formData: FormData) {
     console.error(error)
     throw new Error('Tréning sa nepodarilo upraviť')
   }
+
+  // A raised maxParticipants frees a spot exactly like an unregistration does.
+  await notifyWaitlist(id)
 
   revalidatePath('/trainings')
   redirect('/trainings')
