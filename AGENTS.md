@@ -133,14 +133,13 @@ related plan and do not assume the migration is complete.
   is the one caller, after a successful unregistration, admin removal, or
   training edit. The waitlist reserves nothing: whoever registers first gets
   the spot.
-- The production database is behind the code, and
-  `20260902073053_registration_rules.sql` must be applied there in two steps,
-  not one: its functions before the deploy, its anon revokes only after. The
-  deployed code still reads trainings as `anon`, so revoking first breaks the
-  live site. The procedure is in plan `013`.
-  `20260911075500_training_waitlist.sql` comes after it in file order and is
-  expand-only: apply it in the SQL Editor before deploying the waitlist code,
-  never before the B6 functions it replaces.
+- Production database state, verified in the SQL Editor on 2026-09-11: every
+  migration up to and including `20260911075500_training_waitlist.sql` is
+  applied. The B6 contract step is done (`Anon can view trainings` no longer
+  exists), and `training_capacity` carries `waitlist_count` / `waitlist_max`.
+  The waitlist migration was applied before the code was released, which is
+  safe because it is expand-only. The two-step procedure for B6 in plan `013`
+  is historical.
 
 ## Deferred work registers
 
@@ -277,10 +276,10 @@ Consequences, which every production change must respect:
 - Production has **no** `supabase_migrations.schema_migrations` history, so
   `migration list` cannot tell you what is applied there. Verify by querying
   for the objects a migration creates before and after running it.
-- Never assume production and development are in sync. Verified in production
-  on 2026-09-01: `20260214140608_initial_setup` and `20260831110000_three_role_model`
-  are applied; `20260901073108_training_capacity_view` and
-  `20260901080714_rls_admin_owner_and_grants` are not.
+- Never assume production and development are in sync. Last verified in
+  production on 2026-09-11: every migration through
+  `20260911075500_training_waitlist` is applied. Re-verify by querying for
+  the objects before trusting this line.
 - This is why every migration must be safe to re-run.
 
 ### Migration style
