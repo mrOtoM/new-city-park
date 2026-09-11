@@ -7,8 +7,15 @@ import { TRAINING_TYPES } from '@/lib/constants'
 import { sendTrainingRegistrationEmail, sendTrainingUnregistrationEmail } from '@/lib/email'
 import type { ActionResult, ParticipantContact, RegistrationCode } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
+import { notifyWaitlist } from '@/services/actions/waitlist-notifications'
 import { getTraining } from '@/services/queries/trainings'
-import { registerForTraining, removeParticipantByAdmin, unregisterFromTraining } from '@/services/queries/registrations'
+import {
+  joinTrainingWaitlist,
+  leaveTrainingWaitlist,
+  registerForTraining,
+  removeParticipantByAdmin,
+  unregisterFromTraining,
+} from '@/services/queries/registrations'
 
 /** Every code the database can return, so a new one cannot be added silently. */
 const MESSAGES: Record<Exclude<RegistrationCode, 'ok'>, string> = {
@@ -19,6 +26,10 @@ const MESSAGES: Record<Exclude<RegistrationCode, 'ok'>, string> = {
   full: 'Tréning je už plne obsadený',
   deadline_passed: 'Odhlásenie už nie je možné, termín prešiel',
   not_registered: 'Na tento tréning nie si prihlásený',
+  not_full: 'Tréning má voľné miesto, prihlás sa priamo',
+  already_waitlisted: 'Už si náhradník na tomto tréningu',
+  waitlist_full: 'Zoznam náhradníkov je už plný',
+  not_waitlisted: 'Nie si náhradník na tomto tréningu',
 }
 
 function toResult(code: RegistrationCode): ActionResult {
@@ -65,8 +76,27 @@ export async function unregisterFromTrainingAction(trainingId: number): Promise<
   if (!result.ok) return result
 
   await notifyUnregistered(trainingId, { name: user.name, email: user.email })
+  await notifyWaitlist(trainingId)
 
   revalidateTrainingViews()
+
+  return result
+}
+
+export async function joinWaitlistAction(trainingId: number): Promise<ActionResult> {
+  await requireUser()
+  const result = toResult(await joinTrainingWaitlist(trainingId))
+
+  if (result.ok) revalidateTrainingViews()
+
+  return result
+}
+
+export async function leaveWaitlistAction(trainingId: number): Promise<ActionResult> {
+  await requireUser()
+  const result = toResult(await leaveTrainingWaitlist(trainingId))
+
+  if (result.ok) revalidateTrainingViews()
 
   return result
 }
@@ -81,6 +111,7 @@ export async function removeParticipantAction(trainingId: number, userId: string
   const participant = await removeParticipantByAdmin(trainingId, userId)
 
   await notifyUnregistered(trainingId, participant, { byAdmin: true })
+  await notifyWaitlist(trainingId)
 
   revalidatePath(`/trainings/${trainingId}/edit`)
   revalidateTrainingViews()

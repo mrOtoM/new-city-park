@@ -121,11 +121,26 @@ related plan and do not assume the migration is complete.
   service-role key is absent from both bundles, no regular-user path is
   privileged, and the full suite passes. Key rotation, the rate-limit reading,
   and the production release are owner-only and remain open.
+- Plan `014` (training waitlist) is implemented; the record is in
+  `docs/plans/014-training-waitlist-plan.md`. `public.training_waitlist`
+  holds user ids only; `join_training_waitlist` / `leave_training_waitlist`
+  are the only writers, the limit is `public.waitlist_capacity()` (5) and is
+  never hardcoded in TypeScript, and `training_capacity` exposes it as
+  `waitlist_count` / `waitlist_max`. `register_for_training` drops the caller
+  from the waitlist and resets `notified_at` when it fills the training.
+  `claim_waitlist_notifications` returns other users' e-mails and is therefore
+  executable by `service_role` only; `services/actions/waitlist-notifications.ts`
+  is the one caller, after a successful unregistration, admin removal, or
+  training edit. The waitlist reserves nothing: whoever registers first gets
+  the spot.
 - The production database is behind the code, and
   `20260902073053_registration_rules.sql` must be applied there in two steps,
   not one: its functions before the deploy, its anon revokes only after. The
   deployed code still reads trainings as `anon`, so revoking first breaks the
   live site. The procedure is in plan `013`.
+  `20260911075500_training_waitlist.sql` comes after it in file order and is
+  expand-only: apply it in the SQL Editor before deploying the waitlist code,
+  never before the B6 functions it replaces.
 
 ## Deferred work registers
 
@@ -303,9 +318,11 @@ Consequences, which every production change must respect:
 - The exception is a definition module, where the type is the deliverable:
   `lib/auth/roles.ts` owns `Role` and `Capability`, `lib/auth/auth-result.ts`
   owns `AuthResult`.
-- Component prop interfaces stay in the component file; they are part of its
-  signature, not shared vocabulary. Promote one to `lib/types.ts` as soon as a
-  second file needs it.
+- Component prop interfaces and a component's internal state/reducer types
+  also live in `lib/types.ts`, not in the component file (owner's decision,
+  2026-09-11). Name them after the component (`TrainingListProps`,
+  `TrainingListState`, `TrainingEditTabsProps`). Components that still declare
+  their own types predate this rule; move them when the file is touched.
 - Reads belong in `services/queries/`.
 - Writes belong in `services/actions/`.
 - Keep service-role access on the server and after the appropriate role check.

@@ -185,6 +185,18 @@ Regular authenticated work uses the cookie-bound server client so PostgreSQL
 receives the user's auth context and applies RLS. Privileged functions must
 protect themselves; a check in the calling page alone is not sufficient.
 
+### Approved system operations on regular-user paths
+
+The rule above covers the user's own data. A **system operation** is a
+side effect the application performs on its own behalf after a user's write
+has succeeded, on data that is not the acting user's and is never returned to
+them. Each one is approved here individually; none may be inferred from a
+feature requirement.
+
+| Operation | Trigger | Privileged surface | Containment |
+| --- | --- | --- | --- |
+| Waitlist notification (plan `014`) | a participant unregisters, an admin removes one, or an admin edits a training | `public.claim_waitlist_notifications(bigint)`, called through `lib/supabase/admin.ts` from `services/actions/waitlist-notifications.ts` | The function is `SECURITY DEFINER`, executable by `service_role` only (`authenticated` and `anon` get `42501`), and marks the rows it returns so a repeat call returns nothing. `notifyWaitlist` runs only after the calling action's own guarded write returned `ok`, hands the rows to `lib/email.ts`, and returns `void`. The module carries no `'use server'`, so it is not a callable Server Action. |
+
 ## Protected entry-point rules
 
 ### Pages and layouts

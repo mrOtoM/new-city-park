@@ -180,7 +180,9 @@ cross-cutting utilities:
 - `lib/supabase/` owns distinct Supabase client factories and session plumbing;
 - `database.types.ts` is generated from the development database and is not a
   hand-maintained domain model;
-- `types.ts` contains application DTO/domain types that are genuinely shared;
+- `types.ts` contains every application DTO/domain type and, since
+  2026-09-11, component prop and internal state types as well — a component
+  file declares no `interface` or `type` of its own;
 - `constants.ts`, `email.ts`, and `utils.ts` remain flat until multiple files
   justify a dedicated directory.
 
@@ -202,11 +204,15 @@ Implemented notifications:
 | A user unregisters themselves        | `sendTrainingUnregistrationEmail` | that user               |
 | An admin removes a participant       | `sendTrainingUnregistrationEmail` | the removed participant |
 | An admin deletes a training          | `sendTrainingCancelledEmails`     | all active participants |
+| A spot opens on a full training      | `sendWaitlistSpotOpenedEmails`    | every waitlisted person not yet told about this opening |
 
 Invariants:
 
 - Only `services/actions/` triggers an email, after the database write has
-  succeeded; queries and UI components must not send mail.
+  succeeded; queries and UI components must not send mail. A helper that
+  several actions share, such as `services/actions/waitlist-notifications.ts`,
+  lives in the same directory but carries no `'use server'`, so it is not
+  itself a callable action.
 - Sending is fire-and-forget and its failure never fails the user operation, as
   required by the retry rules in the engineering-quality overview.
 - All interpolated values are HTML-escaped before they reach a template.
@@ -220,8 +226,10 @@ Invariants:
 - A recipient without an address is skipped, never an error: the notification
   is a side effect of the operation, not part of it.
 
-Changing a training does not notify anyone, and there is no cancelled training
-state — deletion is the only cancellation path today.
+Changing a training notifies nobody about the change itself; it only runs the
+waitlist check, because a raised capacity opens a spot. There is no cancelled
+training state — deletion is the only cancellation path today, and it does
+not notify waitlisted people (plan `014`, future work).
 
 ### `services/`
 
@@ -313,4 +321,3 @@ does not authorize implementation outside the referenced plan.
 | ID         | Deferred finding and exit condition                                                                                                                                                           | Status | Tracking                               |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------- |
 | `ARCH-004` | `app/page.tsx` and `app/(public)/page.tsx` both map to `/`. Resolve only after one root-page behavior is explicitly selected, the conflict is removed, and the route graph/build verifies it. | Open   | Requires a separate product/route plan |
-| `ARCH-005` | The `Training` interface is declared twice with different fields, in `app/(protected)/calendar/_components/Calendar.tsx` and `components/trainings/TrainingList.tsx`. Resolve when one shared shape lives in `lib/types.ts` and both components import it. | Open   | Requires a component/types pass        |

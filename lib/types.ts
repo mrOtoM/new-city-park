@@ -37,6 +37,10 @@ export const REGISTRATION_CODES = [
   'full',
   'deadline_passed',
   'not_registered',
+  'not_full',
+  'already_waitlisted',
+  'waitlist_full',
+  'not_waitlisted',
 ] as const
 
 export type RegistrationCode = (typeof REGISTRATION_CODES)[number]
@@ -44,6 +48,74 @@ export type RegistrationCode = (typeof REGISTRATION_CODES)[number]
 export interface ParticipantContact {
   name: string
   email: string | null
+}
+
+export interface Training {
+  id: number
+  type: string
+  datetime: string
+  note: string
+  unregisterDeadline?: string | null
+  maxParticipants?: number | null
+}
+
+export interface CalendarProps {
+  trainings: Training[]
+  onDateSelect?: (date: string) => void
+}
+
+export interface TrainingListProps {
+  trainings: Training[]
+  role?: Role
+  showAll?: boolean
+  userRegistrations?: number[]
+  userWaitlist?: number[]
+  allowUnregister?: boolean
+  occupancy?: Record<number, TrainingOccupancy>
+  onlyRegistered?: boolean
+}
+
+export type TrainingListChange =
+  | { kind: 'registration'; trainingId: number; joined: boolean }
+  | { kind: 'waitlist'; trainingId: number; joined: boolean }
+
+export interface TrainingListState {
+  registrations: number[]
+  waitlist: number[]
+  occupancy: Record<number, TrainingOccupancy>
+}
+
+export interface TrainingListConfirmation {
+  training: Training
+  kind: 'unregister' | 'leaveWaitlist'
+}
+
+export interface TrainingEditTabsProps {
+  training: {
+    id?: number
+    type: string
+    datetime: string
+    note?: string
+    minParticipants?: number
+    maxParticipants?: number
+    unregisterDeadline?: string | null
+  }
+  action: (formData: FormData) => void
+  participants: TrainingParticipants
+  waitlistMax?: number
+  onRemoveParticipant?: (trainingId: number, userId: string) => Promise<void>
+}
+
+export interface TrainingOccupancy {
+  active: number
+  max: number | null
+  waitlist: number
+  waitlistMax: number
+}
+
+export interface WaitlistRecipient {
+  name: string
+  email: string
 }
 
 export interface UserJoin {
@@ -111,7 +183,17 @@ export interface CancelledParticipant {
   cancelledAt: string
 }
 
+export interface WaitlistedParticipant {
+  userId: string
+  name: string
+  phone: string
+  email: string
+  joinedAt: string
+  notifiedAt: string | null
+}
+
 export interface TrainingParticipants {
   active: ActiveParticipant[]
   cancelled: CancelledParticipant[]
+  waitlist: WaitlistedParticipant[]
 }
