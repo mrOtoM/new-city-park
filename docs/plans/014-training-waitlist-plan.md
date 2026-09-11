@@ -440,7 +440,7 @@ Development first; each step verified before the next.
 
 ## Implementation record
 
-Implemented on 2026-09-11 on branch `feature/training-waitlist`, migration
+Implemented on 2026-09-11 on branch `Add-training-waitlist`, migration
 `20260911075500_training_waitlist.sql` applied to the development project
 `bqefyxloqktstljbzbgu` with `npx supabase db push`.
 

@@ -50,6 +50,62 @@ export interface ParticipantContact {
   email: string | null
 }
 
+export interface Training {
+  id: number
+  type: string
+  datetime: string
+  note: string
+  unregisterDeadline?: string | null
+  maxParticipants?: number | null
+}
+
+export interface CalendarProps {
+  trainings: Training[]
+  onDateSelect?: (date: string) => void
+}
+
+export interface TrainingListProps {
+  trainings: Training[]
+  role?: Role
+  showAll?: boolean
+  userRegistrations?: number[]
+  userWaitlist?: number[]
+  allowUnregister?: boolean
+  occupancy?: Record<number, TrainingOccupancy>
+  onlyRegistered?: boolean
+}
+
+export type TrainingListChange =
+  | { kind: 'registration'; trainingId: number; joined: boolean }
+  | { kind: 'waitlist'; trainingId: number; joined: boolean }
+
+export interface TrainingListState {
+  registrations: number[]
+  waitlist: number[]
+  occupancy: Record<number, TrainingOccupancy>
+}
+
+export interface TrainingListConfirmation {
+  training: Training
+  kind: 'unregister' | 'leaveWaitlist'
+}
+
+export interface TrainingEditTabsProps {
+  training: {
+    id?: number
+    type: string
+    datetime: string
+    note?: string
+    minParticipants?: number
+    maxParticipants?: number
+    unregisterDeadline?: string | null
+  }
+  action: (formData: FormData) => void
+  participants: TrainingParticipants
+  waitlistMax?: number
+  onRemoveParticipant?: (trainingId: number, userId: string) => Promise<void>
+}
+
 export interface TrainingOccupancy {
   active: number
   max: number | null

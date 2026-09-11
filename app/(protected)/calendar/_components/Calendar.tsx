@@ -2,19 +2,8 @@
 
 import React, { useState } from 'react'
 
+import type { CalendarProps } from '@/lib/types'
 import { useTraining } from '@/components/providers/TrainingContext'
-
-interface Training {
-  id: number
-  type: string
-  datetime: string
-  note: string
-}
-
-interface CalendarProps {
-  trainings: Training[]
-  onDateSelect?: (date: string) => void
-}
 
 export default function Calendar({ trainings, onDateSelect }: CalendarProps) {
   const today = new Date()

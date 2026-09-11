@@ -3,9 +3,16 @@
 import { useOptimistic, useState, useTransition } from 'react'
 import { Pencil, Users } from 'lucide-react'
 
-import { type Role, hasAdminCapabilities } from '@/lib/auth/roles'
+import { hasAdminCapabilities } from '@/lib/auth/roles'
 import { TRAINING_TYPES } from '@/lib/constants'
-import type { ActionResult, TrainingOccupancy } from '@/lib/types'
+import type {
+  ActionResult,
+  TrainingListChange,
+  TrainingListConfirmation,
+  TrainingListProps,
+  TrainingListState,
+  TrainingOccupancy,
+} from '@/lib/types'
 import { formatDate, isDeadlinePassed } from '@/lib/utils'
 import { useTraining } from '@/components/providers/TrainingContext'
 import {
@@ -17,38 +24,6 @@ import {
 import Button from '@/components/ui/Button'
 import ConfirmSheet from '@/components/ui/ConfirmSheet'
 
-interface Training {
-  id: number
-  type: string
-  datetime: string
-  note: string
-  unregisterDeadline?: string | null
-  maxParticipants?: number | null
-}
-
-interface TrainingListProps {
-  trainings: Training[]
-  role?: Role
-  showAll?: boolean
-  userRegistrations?: number[]
-  userWaitlist?: number[]
-  allowUnregister?: boolean
-  occupancy?: Record<number, TrainingOccupancy>
-  onlyRegistered?: boolean
-}
-
-type ListChange =
-  | { kind: 'registration'; trainingId: number; joined: boolean }
-  | { kind: 'waitlist'; trainingId: number; joined: boolean }
-
-interface ListState {
-  registrations: number[]
-  waitlist: number[]
-  occupancy: Record<number, TrainingOccupancy>
-}
-
-type Confirmation = { training: Training; kind: 'unregister' | 'leaveWaitlist' }
-
 const EMPTY_OCCUPANCY: TrainingOccupancy = { active: 0, max: null, waitlist: 0, waitlistMax: 0 }
 
 function toggle(ids: number[], id: number, present: boolean): number[] {
@@ -56,7 +31,7 @@ function toggle(ids: number[], id: number, present: boolean): number[] {
 }
 
 // Membership and the matching count move together, so they never disagree mid-flight.
-function applyListChange(state: ListState, change: ListChange): ListState {
+function applyListChange(state: TrainingListState, change: TrainingListChange): TrainingListState {
   const current = state.occupancy[change.trainingId] ?? EMPTY_OCCUPANCY
   const delta = change.joined ? 1 : -1
 
@@ -98,7 +73,7 @@ export default function TrainingList({
     applyListChange,
   )
   const [, startTransition] = useTransition()
-  const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
+  const [confirmation, setConfirmation] = useState<TrainingListConfirmation | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const getTrainingType = (type: string) => {
@@ -121,7 +96,7 @@ export default function TrainingList({
 
   // The optimistic change lives only inside the transition, so a failed result
   // rolls it back on its own; the message is what the user needs.
-  const run = (change: ListChange, action: (trainingId: number) => Promise<ActionResult>) => {
+  const run = (change: TrainingListChange, action: (trainingId: number) => Promise<ActionResult>) => {
     setErrorMsg(null)
     startTransition(async () => {
       applyChange(change)

@@ -180,7 +180,9 @@ cross-cutting utilities:
 - `lib/supabase/` owns distinct Supabase client factories and session plumbing;
 - `database.types.ts` is generated from the development database and is not a
   hand-maintained domain model;
-- `types.ts` contains application DTO/domain types that are genuinely shared;
+- `types.ts` contains every application DTO/domain type and, since
+  2026-09-11, component prop and internal state types as well — a component
+  file declares no `interface` or `type` of its own;
 - `constants.ts`, `email.ts`, and `utils.ts` remain flat until multiple files
   justify a dedicated directory.
 
@@ -319,4 +321,3 @@ does not authorize implementation outside the referenced plan.
 | ID         | Deferred finding and exit condition                                                                                                                                                           | Status | Tracking                               |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------- |
 | `ARCH-004` | `app/page.tsx` and `app/(public)/page.tsx` both map to `/`. Resolve only after one root-page behavior is explicitly selected, the conflict is removed, and the route graph/build verifies it. | Open   | Requires a separate product/route plan |
-| `ARCH-005` | The `Training` interface is declared twice with different fields, in `app/(protected)/calendar/_components/Calendar.tsx` and `components/trainings/TrainingList.tsx`. Resolve when one shared shape lives in `lib/types.ts` and both components import it. | Open   | Requires a component/types pass        |

@@ -3,25 +3,9 @@
 import { useState, useTransition } from 'react'
 import { Clock, Phone, UserMinus } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import type { ActiveParticipant, TrainingParticipants } from '@/lib/types'
+import type { ActiveParticipant, TrainingEditTabsProps } from '@/lib/types'
 import TrainingForm from '@/app/(protected)/trainings/_components/TrainingForm'
 import ConfirmSheet from '@/components/ui/ConfirmSheet'
-
-interface TrainingEditTabsProps {
-  training: {
-    id?: number
-    type: string
-    datetime: string
-    note?: string
-    minParticipants?: number
-    maxParticipants?: number
-    unregisterDeadline?: string | null
-  }
-  action: (formData: FormData) => void
-  participants: TrainingParticipants
-  waitlistMax?: number
-  onRemoveParticipant?: (trainingId: number, userId: string) => Promise<void>
-}
 
 export default function TrainingEditTabs({
   training,

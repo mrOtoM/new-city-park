@@ -318,9 +318,11 @@ Consequences, which every production change must respect:
 - The exception is a definition module, where the type is the deliverable:
   `lib/auth/roles.ts` owns `Role` and `Capability`, `lib/auth/auth-result.ts`
   owns `AuthResult`.
-- Component prop interfaces stay in the component file; they are part of its
-  signature, not shared vocabulary. Promote one to `lib/types.ts` as soon as a
-  second file needs it.
+- Component prop interfaces and a component's internal state/reducer types
+  also live in `lib/types.ts`, not in the component file (owner's decision,
+  2026-09-11). Name them after the component (`TrainingListProps`,
+  `TrainingListState`, `TrainingEditTabsProps`). Components that still declare
+  their own types predate this rule; move them when the file is touched.
 - Reads belong in `services/queries/`.
 - Writes belong in `services/actions/`.
 - Keep service-role access on the server and after the appropriate role check.
