@@ -175,13 +175,6 @@ export default function TrainingList({
             const remaining = training.maxParticipants ? training.maxParticipants - registeredCount : null
             const waitlistFull = current.waitlist >= current.waitlistMax
             const showWaitlist = !isAdmin && !isRegistered && isFull
-            const waitlistNote = !showWaitlist
-              ? null
-              : isWaitlisted
-                ? 'Si náhradník. Keď sa uvoľní miesto, pošleme ti e-mail.'
-                : waitlistFull
-                  ? 'Tréning aj zoznam náhradníkov sú plné.'
-                  : 'Tréning je plný. Ako náhradník dostaneš e-mail hneď, ako sa uvoľní miesto, a budeš sa môcť prihlásiť. Miesto nie je rezervované – platí poradie prihlásenia.'
             return (
               <li key={training.id} className="bg-primary-900/50 w-full space-y-2 rounded-lg p-3">
                 <div className="flex w-full items-center justify-between">
@@ -231,28 +224,35 @@ export default function TrainingList({
                     <Button variant="ghost" size="sm" className="rounded-2xl" disabled>
                       Odhlásenie uzavreté
                     </Button>
-                  ) : showWaitlist && isWaitlisted ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="rounded-2xl"
-                      onClick={() => setConfirmation({ training, kind: 'leaveWaitlist' })}
-                    >
-                      Náhradník
-                    </Button>
-                  ) : showWaitlist && waitlistFull ? (
-                    <Button variant="ghost" size="sm" className="rounded-2xl" disabled>
-                      Náhradníci obsadení
-                    </Button>
                   ) : showWaitlist ? (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-2xl"
-                      onClick={() => handleJoinWaitlist(training.id)}
-                    >
-                      Prihlásiť sa ako náhradník
-                    </Button>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Button variant="ghost" size="sm" className="rounded-2xl" disabled>
+                        Plne obsadený !
+                      </Button>
+                      {isWaitlisted ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-2xl"
+                          onClick={() => setConfirmation({ training, kind: 'leaveWaitlist' })}
+                        >
+                          Náhradník
+                        </Button>
+                      ) : waitlistFull ? (
+                        <Button variant="ghost" size="sm" className="rounded-2xl" disabled>
+                          Náhradníci obsadení
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="rounded-2xl"
+                          onClick={() => handleJoinWaitlist(training.id)}
+                        >
+                          Prihlásiť sa ako náhradník
+                        </Button>
+                      )}
+                    </div>
                   ) : (
                     <Button
                       variant={isRegistered ? 'ghost' : 'secondary'}
@@ -267,7 +267,6 @@ export default function TrainingList({
                   )}
                 </div>
                 {training.note && <p className="text-primary-300 pl-13 text-xs italic">{training.note}</p>}
-                {waitlistNote && <p className="text-primary-400 pl-13 text-xs">{waitlistNote}</p>}
                 {showAll && training.unregisterDeadline && (
                   <p className={`pl-13 text-xs ${deadlinePassed ? 'text-red-400' : 'text-primary-500'}`}>
                     {deadlinePassed

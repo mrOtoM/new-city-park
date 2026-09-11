@@ -35,7 +35,7 @@ goal is:
    admin removes one — every waitlisted person receives an e-mail saying a
    spot is free and they can register now. The spot is **not** reserved;
    whoever registers first gets it.
-4. Next to the button a short note explains exactly that.
+4. The existing `Plne obsadený !` label stays; the waitlist button sits beside it. No explanatory note on the card (owner's decision, 2026-09-11); the e-mail explains the rules.
 5. An admin or owner sees the waitlisted people on the training's edit page,
    as a third section next to `Prihlásení` and `Odhlásení`.
 
@@ -323,16 +323,20 @@ Optimistic state becomes `{ registrations, waitlist: number[], occupancy }`,
 with a `WaitlistChange` next to `RegistrationChange`. Button states for a
 non-admin on a full training they are not registered for:
 
-| state | button | note under the card |
-|---|---|---|
-| not waitlisted, waitlist open | `secondary` **Prihlásiť sa ako náhradník** | *Tréning je plný. Ako náhradník dostaneš e-mail hneď, ako sa uvoľní miesto, a budeš sa môcť prihlásiť. Miesto nie je rezervované – platí poradie prihlásenia.* |
-| waitlisted | `ghost` **Náhradník** (click → `ConfirmSheet` *Zrušiť náhradníka?* / *Zrušiť náhradníka* / *Späť*) | *Si náhradník. Keď sa uvoľní miesto, pošleme ti e-mail.* |
-| not waitlisted, waitlist full | `ghost` disabled **Náhradníci obsadení** | *Tréning aj zoznam náhradníkov sú plné.* |
+The existing disabled **Plne obsadený !** label stays exactly where it was;
+a second button appears beside it (owner's decision, 2026-09-11 — no
+explanatory note under the card):
 
-The note uses `text-primary-400 text-xs` in the same `pl-13` column as the
-existing deadline line. When the training has a free spot the button and note
-disappear and the ordinary `Prihlásiť sa` returns, even for a waitlisted user
-— that is the moment the e-mail told them about.
+| state | second button |
+|---|---|
+| not waitlisted, waitlist open | `secondary` **Prihlásiť sa ako náhradník** |
+| waitlisted | `ghost` **Náhradník** (click → `ConfirmSheet` *Zrušiť náhradníka?* / *Zrušiť náhradníka* / *Späť*) |
+| not waitlisted, waitlist full | `ghost` disabled **Náhradníci obsadení** |
+
+When the training has a free spot both buttons disappear and the ordinary
+`Prihlásiť sa` returns, even for a waitlisted user — that is the moment the
+e-mail told them about. The e-mail itself carries the explanation that the
+spot is not reserved.
 
 ### Admin UI (`TrainingEditTabs.tsx`)
 
