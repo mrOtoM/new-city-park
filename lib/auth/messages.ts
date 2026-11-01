@@ -13,6 +13,7 @@ export const AUTH_MESSAGES = {
   signUpFailed: 'Registráciu sa nepodarilo dokončiť, skúste to znova',
   resetFailed: 'Email sa nepodarilo odoslať, skúste to znova',
   passwordChangeFailed: 'Heslo sa nepodarilo zmeniť, skúste to znova',
+  recoveryLinkInvalid: 'Odkaz na obnovenie hesla je neplatný alebo vypršal, požiadajte o nový',
   googleFailed: 'Nepodarilo sa prihlásiť cez Google',
   misconfigured: 'Prihlásenie je momentálne nedostupné',
 } as const

@@ -7,13 +7,14 @@ import Button from '@/components/ui/Button'
 import { AUTH_MESSAGES, resetErrorMessage } from '@/lib/auth/messages'
 import { authCallbackUrl } from '@/lib/site-url'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
-import { useState } from 'react'
+import { use, useState } from 'react'
 import { Mail } from 'lucide-react'
 
-export default function ForgotPasswordPage() {
+export default function ForgotPasswordPage({ searchParams }: { searchParams: Promise<{ expired?: string }> }) {
+  const { expired } = use(searchParams)
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(expired ? AUTH_MESSAGES.recoveryLinkInvalid : '')
   const [emailSent, setEmailSent] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
