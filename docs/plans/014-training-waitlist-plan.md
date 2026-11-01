@@ -436,7 +436,9 @@ Development first; each step verified before the next.
 - [x] `npm test`, `npm run test:db`, `npm run build` — green, see the record.
 - [ ] Manual pass in the browser with Resend configured in development
       (owner; the agent does not sign in with a password).
-- [ ] Merge the feature branch into `development`.
+- [x] Merge the feature branch into `development` (fast-forward, 2026-09-11).
+- [x] Production migration applied and verified in the SQL Editor on 2026-09-11 (5 view columns, `waitlist_capacity()` = 5), before the release.
+- [ ] PR `development` → `main`, then the post-release checks (waitlist button as a user, `Náhradníci` section as an admin, `RESEND_API_KEY` present).
 
 ## Implementation record
 
