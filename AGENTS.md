@@ -181,6 +181,13 @@ in `docs/plans/`.
 - Merge `main` back into `development` only for production hotfixes or other
   changes made directly on `main`.
 - Never push directly to `main`.
+- Naming: feature branches are `Verb-kebab-case` (`Add-training-waitlist`,
+  `Fix-statistics-role`), with no `feature/` or `feat:` prefix. A PR into
+  `development` is titled like its branch in plain words (`Add training
+  waitlist`). A PR from `development` into `main` is a release, so its title
+  is `Release: <what is being released>`; that prefix is used nowhere else.
+  The description says what changed, whether a migration is involved and
+  where it stands in production, and what was verified — no checklists.
 
 The active branch must be checked before every operation that can affect code,
 deployment, or a database. A local branch with the expected name does not prove
